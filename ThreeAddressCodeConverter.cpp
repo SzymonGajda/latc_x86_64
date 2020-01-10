@@ -34,7 +34,7 @@ void ThreeAddressCodeConverter::visitDecl(Decl *p) {
 
 void ThreeAddressCodeConverter::visitAss(Ass *p) {
     p->expr_->accept(this);
-    Ident ident = symbolsTable->getSymbol(p->ident_);
+    Ident ident = symbolsTable->getNewSymbol(p->ident_);
     QuadCopy *copy =  new QuadCopy(ident, arg);
     quadBlk->quadlist->push_back(copy);
 }
@@ -43,7 +43,7 @@ void ThreeAddressCodeConverter::visitIncr(Incr *p) {
     Ident ident = symbolsTable->getSymbol(p->ident_);
     QuadArg arg1 = QuadArg(false, 0, ident);
     QuadArg arg2 = QuadArg(true, 1, "");
-    QuadAss2 *ass = new QuadAss2(ident, arg1, arg2, "+");
+    QuadAss2 *ass = new QuadAss2(ident, arg1, arg2, "add");
     quadBlk->quadlist->push_back(ass);
 }
 
@@ -51,7 +51,7 @@ void ThreeAddressCodeConverter::visitDecr(Decr *p) {
     Ident ident = symbolsTable->getSymbol(p->ident_);
     QuadArg arg1 = QuadArg(false, 0, ident);
     QuadArg arg2 = QuadArg(true, 1, "");
-    QuadAss2 *ass = new QuadAss2(ident, arg1, arg2, "-");
+    QuadAss2 *ass = new QuadAss2(ident, arg1, arg2, "sub");
     quadBlk->quadlist->push_back(ass);
 }
 
@@ -185,7 +185,7 @@ void ThreeAddressCodeConverter::visitEString(EString *p) {
 void ThreeAddressCodeConverter::visitNeg(Neg *p) {
     p->expr_->accept(this);
     Ident res = symbolsTable->getNewSymbol();
-    QuadAss1 *quadAss1 = new QuadAss1(res, arg, "-");
+    QuadAss1 *quadAss1 = new QuadAss1(res, arg, "neg");
     quadBlk->quadlist->push_back(quadAss1);
     arg = QuadArg(false, 0, res);
 }
@@ -193,7 +193,7 @@ void ThreeAddressCodeConverter::visitNeg(Neg *p) {
 void ThreeAddressCodeConverter::visitNot(Not *p) {
     p->expr_->accept(this);
     Ident res = symbolsTable->getNewSymbol();
-    QuadAss1 *quadAss1 = new QuadAss1(res, arg, "~");
+    QuadAss1 *quadAss1 = new QuadAss1(res, arg, "not");
     quadBlk->quadlist->push_back(quadAss1);
     arg = QuadArg(false, 0, res);
 }
@@ -238,31 +238,31 @@ void ThreeAddressCodeConverter::visitERel(ERel *p) {
 }
 
 void ThreeAddressCodeConverter::visitEAnd(EAnd *p) {
-    op = "&&";
+    op = "and";
 }
 
 void ThreeAddressCodeConverter::visitEOr(EOr *p) {
-    op = "||";
+    op = "or";
 }
 
 void ThreeAddressCodeConverter::visitPlus(Plus *p) {
-    op = "+";
+    op = "add";
 }
 
 void ThreeAddressCodeConverter::visitMinus(Minus *p) {
-    op = "-";
+    op = "sub";
 }
 
 void ThreeAddressCodeConverter::visitTimes(Times *p) {
-    op = "*";
+    op = "imul";
 }
 
 void ThreeAddressCodeConverter::visitDiv(Div *p) {
-    op = "/";
+    op = "idiv";
 }
 
 void ThreeAddressCodeConverter::visitMod(Mod *p) {
-    op = "%";
+    op = "mod";
 }
 
 void ThreeAddressCodeConverter::visitLTH(LTH *p) {

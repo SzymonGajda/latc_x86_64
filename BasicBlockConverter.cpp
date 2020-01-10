@@ -5,13 +5,18 @@
 #include <iostream>
 #include "BasicBlockConverter.h"
 #include "TACPrinter.h"
+#include "CodeGenerator.h"
 
 
 void BasicBlockConverter::visitProg(Prog *q) {
     q->listtopdef_->accept(this);
     setEdges();
     controlFlowGraph->calculateDataFlow();
-    controlFlowGraph->printCFG();
+   // controlFlowGraph->printCFG();
+    CodeGenerator codeGenerator;
+    codeGenerator.controlFlowGraph = controlFlowGraph;
+    codeGenerator.allocator = new Allocator;
+    codeGenerator.generateCode();
 }
 
 void BasicBlockConverter::visitQuadBlk(QuadBlk *q) {

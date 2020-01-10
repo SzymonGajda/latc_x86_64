@@ -37,6 +37,7 @@ public:
     void entryScope();
     void exitScope();
     String getNewSymbol();
+    String getNewSymbol(Ident ident);
 };
 
 

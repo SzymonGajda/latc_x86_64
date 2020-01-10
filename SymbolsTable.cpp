@@ -9,7 +9,6 @@ SymbolsTable::SymbolsTable() {}
 void SymbolsTable::addSymbol(Ident ident, String type, int lineNumber, Error &error) {
     if (symbolsMap.find(ident) == symbolsMap.end() || symbolsMap.find(ident)->second.empty()) {
         std::stack<VarInfo> stack;
-        //stack.push(std::make_pair(type, depth));
         stack.push(VarInfo("", type, depth));
         symbolsMap[ident] = stack;
         return;
@@ -81,6 +80,15 @@ String SymbolsTable::getSymbol(Ident ident1) {
 
 void SymbolsTable::addLabel(Ident ident) {
     symbolsSet.insert(ident);
+}
+
+String SymbolsTable::getNewSymbol(Ident ident) {
+    Ident newIdent = getNewSymbol();
+    VarInfo varInfo = symbolsMap.find(ident)->second.top();
+    symbolsMap.find(ident)->second.pop();
+    varInfo.ident = newIdent;
+    symbolsMap.find(ident)->second.push(varInfo);
+    return newIdent;
 }
 
 VarInfo::VarInfo(const String &ident, const String &type, int depth) : ident(ident), type(type), depth(depth) {};

@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
         parse_tree->accept(&semanticAnalyser);
         if (semanticAnalyser.error->isError) {
             std::cout << semanticAnalyser.error->getErrorMessage();
+            return 0;
         }
         ThreeAddressCodeConverter *threeAddressCodeConverter = new ThreeAddressCodeConverter;
         threeAddressCodeConverter->functionHeaders = functionHeaders;
