@@ -417,7 +417,7 @@ void BaseVisitor::visitQuadCopy(QuadCopy *q) {
 
 }
 
-void BaseVisitor::visitQuadGoto(QuadGoto *q) {
+void BaseVisitor::visitQuadJmp(QuadJmp *q) {
 
 }
 

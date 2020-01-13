@@ -57,6 +57,7 @@ int main(int argc, char **argv) {
         basicBlockConverter->controlFlowGraph = new ControlFlowGraph;
         basicBlockConverter->basicBlock = new BasicBlock;
         basicBlockConverter->tacPrinter = new TACPrinter;
+        basicBlockConverter->symbolsTable = symbolsTable;
         parse_tree->accept(basicBlockConverter);
         //parse_tree->accept(&tacPrinter);
 

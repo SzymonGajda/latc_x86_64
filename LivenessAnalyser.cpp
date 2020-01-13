@@ -28,7 +28,7 @@ void LivenessAnalyser::visitQuadCopy(QuadCopy *q) {
     }
 }
 
-void LivenessAnalyser::visitQuadGoto(QuadGoto *q) {
+void LivenessAnalyser::visitQuadJmp(QuadJmp *q) {
 
 }
 

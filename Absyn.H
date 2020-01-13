@@ -157,7 +157,7 @@ class QuadAss2;
 
 class QuadCopy;
 
-class QuadGoto;
+class QuadJmp;
 
 class QuadLabel;
 
@@ -320,7 +320,7 @@ public:
 
     virtual void  visitQuadCopy(QuadCopy *q) = 0;
 
-    virtual void  visitQuadGoto(QuadGoto *q) = 0;
+    virtual void  visitQuadJmp(QuadJmp *q) = 0;
 
     virtual void  visitQuadLabel(QuadLabel *q) = 0;
 
@@ -513,21 +513,23 @@ public:
     void swap(QuadCopy &);
 };
 
-class QuadGoto : public Quadruple {
+class QuadJmp : public Quadruple {
 public:
     Ident label;
 
-    QuadGoto(const QuadGoto &);
+    String jmpOp;
 
-    QuadGoto(const Ident &label);
+    QuadJmp(const QuadJmp &);
 
-    QuadGoto &operator=(const QuadGoto &);
+    QuadJmp(const Ident &label, const String &jmpOp);
+
+    QuadJmp &operator=(const QuadJmp &);
 
     virtual void accept(Visitor *v);
 
-    [[nodiscard]] virtual QuadGoto *clone() const;
+    [[nodiscard]] virtual QuadJmp *clone() const;
 
-    void swap(QuadGoto &);
+    void swap(QuadJmp &);
 };
 
 class QuadLabel : public Quadruple {

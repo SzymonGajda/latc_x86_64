@@ -37,8 +37,8 @@ void CodeGenerator::visitQuadCopy(QuadCopy *q) {
     }
 }
 
-void CodeGenerator::visitQuadGoto(QuadGoto *q) {
-    std::cout<<"jmp "<<q->label<<"\n";
+void CodeGenerator::visitQuadJmp(QuadJmp *q) {
+    std::cout<<q->jmpOp<<" "<<q->label<<"\n";
 }
 
 void CodeGenerator::visitQuadLabel(QuadLabel *q) {
@@ -46,7 +46,16 @@ void CodeGenerator::visitQuadLabel(QuadLabel *q) {
 }
 
 void CodeGenerator::visitQuadIf(QuadIf *q) {
-    BaseVisitor::visitQuadIf(q);
+    if(q->cond.isValue){
+        if(q->cond.value == 0){
+            std::cout<<"jmp "<<q->label2<<"\n";
+        } else{
+            std::cout<<"jmp "<<q->label1<<"\n";
+        }
+    }
+    else{
+        allocator->genIf(q->cond.var, q->label1, q->label2);
+    }
 }
 
 void CodeGenerator::visitQuadParam(QuadParam *q) {

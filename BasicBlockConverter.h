@@ -9,6 +9,7 @@
 #include "Absyn.H"
 #include "ControlFlowGraph.h"
 #include "BaseVisitor.H"
+#include "SymbolsTable.h"
 
 class BasicBlockConverter : public BaseVisitor{
 public:
@@ -17,6 +18,8 @@ public:
     BasicBlock *basicBlock;
 
     TACPrinter *tacPrinter;
+
+    SymbolsTable *symbolsTable;
 
     void printBlock();
 
@@ -34,7 +37,7 @@ public:
 
     void  visitQuadCopy(QuadCopy *q);
 
-    void  visitQuadGoto(QuadGoto *q);
+    void  visitQuadJmp(QuadJmp *q);
 
     void  visitQuadLabel(QuadLabel *q);
 

@@ -154,7 +154,7 @@ public:
 
     void  visitQuadCopy(QuadCopy *q);
 
-    void  visitQuadGoto(QuadGoto *q);
+    void  visitQuadJmp(QuadJmp *q);
 
     void  visitQuadLabel(QuadLabel *q);
 

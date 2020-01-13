@@ -1875,28 +1875,28 @@ QuadCopy &QuadCopy::operator=(const QuadCopy &) {
 
 QuadCopy::QuadCopy(const Ident &res, const QuadArg &arg) : res(res), arg(arg) {}
 
-/********************   QuadGoto   ********************/
+/********************   QuadJmp   ********************/
 
-void QuadGoto::accept(Visitor *v) {
-    v->visitQuadGoto(this);
+void QuadJmp::accept(Visitor *v) {
+    v->visitQuadJmp(this);
 }
 
-QuadGoto *QuadGoto::clone() const {
+QuadJmp *QuadJmp::clone() const {
     return nullptr;
 }
 
-void QuadGoto::swap(QuadGoto &) {
+void QuadJmp::swap(QuadJmp &) {
 
 }
 
-QuadGoto::QuadGoto(const QuadGoto &) {
+QuadJmp::QuadJmp(const QuadJmp &) {
 
 }
 
-QuadGoto &QuadGoto::operator=(const QuadGoto &) {
+QuadJmp &QuadJmp::operator=(const QuadJmp &) {
 }
 
-QuadGoto::QuadGoto(const Ident &label) : label(label) {}
+QuadJmp::QuadJmp(const Ident &label, const String &jmpOp) : label(label), jmpOp(jmpOp) {}
 
 /********************   QuadLabel    ********************/
 

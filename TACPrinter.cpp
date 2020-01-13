@@ -48,7 +48,7 @@ void TACPrinter::visitQuadCopy(QuadCopy *q) {
     std::cout<<"\n";
 }
 
-void TACPrinter::visitQuadGoto(QuadGoto *q) {
+void TACPrinter::visitQuadJmp(QuadJmp *q) {
     std::cout<<"goto "<<q->label<<"\n";
 }
 

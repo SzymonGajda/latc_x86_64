@@ -90,7 +90,7 @@ void ThreeAddressCodeConverter::visitCondElse(CondElse *p) {
     QuadLabel *quadLabelTrue = new QuadLabel(trueLabel);
     quadBlk->quadlist->push_back(quadLabelTrue);
     p->stmt_1->accept(this);
-    QuadGoto *quadGoto = new QuadGoto(endLabel);
+    QuadJmp *quadGoto = new QuadJmp(endLabel, "jmp");
     quadBlk->quadlist->push_back(quadGoto);
     QuadLabel *quadLabelFalse = new QuadLabel(falseLabel);
     quadBlk->quadlist->push_back(quadLabelFalse);
@@ -111,7 +111,7 @@ void ThreeAddressCodeConverter::visitWhile(While *p) {
     QuadLabel *quadLabelTrue = new QuadLabel(trueLabel);
     quadBlk->quadlist->push_back(quadLabelTrue);
     p->stmt_->accept(this);
-    QuadGoto *quadGoto = new QuadGoto(startLabel);
+    QuadJmp *quadGoto = new QuadJmp(startLabel, "jmp");
     quadBlk->quadlist->push_back(quadGoto);
     QuadLabel *quadLabelFalse = new QuadLabel(falseLabel);
     quadBlk->quadlist->push_back(quadLabelFalse);
@@ -232,7 +232,7 @@ void ThreeAddressCodeConverter::visitERel(ERel *p) {
     QuadArg quadArg1 = arg;
     p->expr_2->accept(this);
     QuadArg quadArg2 = arg;
-    QuadAss2 *quadAss2 = new QuadAss2(ident, quadArg1, quadArg2, relOp);
+    QuadAss2 *quadAss2 = new QuadAss2(ident, quadArg1, quadArg2, op);
     quadBlk->quadlist->push_back(quadAss2);
     arg = QuadArg(false, 0, ident);
 }
@@ -266,27 +266,27 @@ void ThreeAddressCodeConverter::visitMod(Mod *p) {
 }
 
 void ThreeAddressCodeConverter::visitLTH(LTH *p) {
-    op = "<";
+    op = "jl";
 }
 
 void ThreeAddressCodeConverter::visitLE(LE *p) {
-    op = "<=";
+    op = "jle";
 }
 
 void ThreeAddressCodeConverter::visitGTH(GTH *p) {
-    op = ">";
+    op = "jg";
 }
 
 void ThreeAddressCodeConverter::visitGE(GE *p) {
-    op = ">=";
+    op = "jge";
 }
 
 void ThreeAddressCodeConverter::visitEQU(EQU *p) {
-    op = "==";
+    op = "je";
 }
 
 void ThreeAddressCodeConverter::visitNE(NE *p) {
-    op = "!=";
+    op = "jne";
 }
 
 void ThreeAddressCodeConverter::visitListTopDef(ListTopDef *p) {

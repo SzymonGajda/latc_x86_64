@@ -16,6 +16,7 @@ void BasicBlockConverter::visitProg(Prog *q) {
     CodeGenerator codeGenerator;
     codeGenerator.controlFlowGraph = controlFlowGraph;
     codeGenerator.allocator = new Allocator;
+    codeGenerator.allocator->symbolsTable = symbolsTable;
     codeGenerator.generateCode();
 }
 
@@ -53,7 +54,7 @@ void BasicBlockConverter::visitQuadCopy(QuadCopy *q) {
     basicBlock->quadlist.push_back(q);
 }
 
-void BasicBlockConverter::visitQuadGoto(QuadGoto *q) {
+void BasicBlockConverter::visitQuadJmp(QuadJmp *q) {
     basicBlock->quadlist.push_back(q);
     basicBlock->successors.insert(q->label);
     basicBlock->num = controlFlowGraph->basicBlocks.size();

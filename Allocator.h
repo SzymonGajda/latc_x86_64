@@ -9,6 +9,7 @@
 #include <map>
 #include "Absyn.H"
 #include "BasicBlock.h"
+#include "SymbolsTable.h"
 
 
 class RegisterDescription{
@@ -53,6 +54,7 @@ public:
     std::map<int, RegisterDescription> registers;
     std::map<Ident, ValueDescription> values;
     std::map<Ident, LivenessInfo> livenessMap;
+    SymbolsTable *symbolsTable;
 
     void initRegisters();
     void initRegistersIdentMap();
@@ -65,6 +67,7 @@ public:
     void genAss2(Ident res, Ident arg1, int val2, String op);
     void genAss2(Ident res, int val1, Ident arg2, String op);
     void genAss2(Ident res, Ident arg1, Ident arg2, String op);
+    void genIf(Ident cond, Ident label1, Ident label2);
     void genRet(Ident retVal);
     void genRet(int retVal);
 
