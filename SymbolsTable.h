@@ -26,9 +26,14 @@ class SymbolsTable {
     int lastSymbol = 0;
     int depth = 0;
     std::map<String, std::stack< VarInfo > > symbolsMap;
+    std::map<String, String> allSymbolsMap;
     std::set<String> symbolsSet;
 public:
     SymbolsTable();
+
+    SymbolsTable(int lastSymbol, int depth, const std::map<String, std::stack<VarInfo>> &symbolsMap,
+                 const std::set<String> &symbolsSet);
+
     void addSymbol(Ident ident, String type, int lineNumber, Error &error);
     void addSymbol(Ident ident1, Ident ident2, String type);
     void addLabel(Ident ident);

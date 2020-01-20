@@ -12,7 +12,7 @@ std::map<Ident, LivenessInfo> BasicBlock::calculateLiveness(std::map<Ident, Live
     liveness.push_back(out);
     LivenessAnalyser livenessAnalyser = LivenessAnalyser();
     std::map<Ident, LivenessInfo> temp;
-    for (int i = quadlist.size() - 1; i >= 0 ; i--) {
+    for (int i = quadlist.size() - 1; i >= 0; i--) {
         livenessAnalyser.created.clear();
         livenessAnalyser.destroyed.clear();
         quadlist[i]->accept(&livenessAnalyser);
@@ -36,12 +36,24 @@ std::map<Ident, LivenessInfo> BasicBlock::calculateLiveness(std::map<Ident, Live
         }
         for (auto it = livenessAnalyser.created.begin(); it != livenessAnalyser.created.end(); it++) {
             LivenessInfo livenessInfo = LivenessInfo((*it), 1);
-           // temp[(*it)]livenessInfo;
-           temp.emplace((*it) ,livenessInfo);
+            // temp[(*it)]livenessInfo;
+            temp.emplace((*it), livenessInfo);
         }
         liveness.push_back(temp);
     }
     return liveness[liveness.size() - 1];
+}
+
+void BasicBlock::generateMemoryMap(SymbolsTable *symbolsTable) {
+    int nextMemLoc = 0;
+    for (auto live : liveness) {
+        for(auto variable : live){
+            if(memoryMap.find(variable.first) == memoryMap.end()){
+                memoryMap.emplace(variable.first, nextMemLoc);
+                nextMemLoc++;
+            }
+        }
+    }
 }
 
 LivenessInfo::LivenessInfo(Ident ident, int nextUse) : ident(std::move(ident)), nextUse(nextUse) {}
@@ -49,7 +61,7 @@ LivenessInfo::LivenessInfo(Ident ident, int nextUse) : ident(std::move(ident)), 
 LivenessInfo::LivenessInfo() {}
 
 bool LivenessInfo::operator==(const LivenessInfo &b) const {
-    return((b.ident == ident));
+    return ((b.ident == ident));
 }
 
 LivenessInfo LivenessInfo::operator=(const LivenessInfo livenessInfo) {

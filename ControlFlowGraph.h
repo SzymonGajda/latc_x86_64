@@ -16,7 +16,7 @@ public:
     std::vector<BasicBlock*> basicBlocks;
 
     void calculateDataFlow();
-
+    void generateMemoryMap(SymbolsTable *symbolsTable);
     void printCFG();
 };
 

@@ -12,6 +12,7 @@ void BasicBlockConverter::visitProg(Prog *q) {
     q->listtopdef_->accept(this);
     setEdges();
     controlFlowGraph->calculateDataFlow();
+    controlFlowGraph->generateMemoryMap(symbolsTable);
    // controlFlowGraph->printCFG();
     CodeGenerator codeGenerator;
     codeGenerator.controlFlowGraph = controlFlowGraph;
@@ -24,12 +25,14 @@ void BasicBlockConverter::visitQuadBlk(QuadBlk *q) {
     for (auto it = q->quadlist->begin(); it != q->quadlist->end(); it++) {
         (*it)->accept(this);
     }
+    if(!basicBlock->quadlist.empty()){
+        controlFlowGraph->basicBlocks.push_back(basicBlock);
+    }
 }
 
 void BasicBlockConverter::visitQuadFunBegin(QuadFunBegin *q) {
     if (!basicBlock->quadlist.empty()) {
         basicBlock->num = controlFlowGraph->basicBlocks.size();
-       // printBlock();
         setMap();
         controlFlowGraph->basicBlocks.push_back(basicBlock);
         basicBlock = new BasicBlock;
@@ -60,7 +63,6 @@ void BasicBlockConverter::visitQuadJmp(QuadJmp *q) {
     basicBlock->num = controlFlowGraph->basicBlocks.size();
     basicBlock->successors.insert(q->label);
     setMap();
-    //printBlock();
     controlFlowGraph->basicBlocks.push_back(basicBlock);
     basicBlock = new BasicBlock;
 }
@@ -69,7 +71,6 @@ void BasicBlockConverter::visitQuadLabel(QuadLabel *q) {
     if (!basicBlock->quadlist.empty()) {
         basicBlock->num = controlFlowGraph->basicBlocks.size();
         basicBlock->successors.insert(q->label);
-      //  printBlock();
         setMap();
         controlFlowGraph->basicBlocks.push_back(basicBlock);
         basicBlock = new BasicBlock;
@@ -85,10 +86,6 @@ void BasicBlockConverter::visitQuadIf(QuadIf *q) {
     basicBlock->quadlist.push_back(q);
     basicBlock->successors.insert(q->label1);
     basicBlock->successors.insert(q->label2);
-   /* basicBlock->num = controlFlowGraph->basicBlocks.size();
-    printBlock();
-    controlFlowGraph->basicBlocks.push_back(basicBlock);
-    basicBlock = new BasicBlock;*/
 }
 
 void BasicBlockConverter::visitQuadParam(QuadParam *q) {
@@ -97,16 +94,11 @@ void BasicBlockConverter::visitQuadParam(QuadParam *q) {
 
 void BasicBlockConverter::visitQuadCall(QuadCall *q) {
     basicBlock->quadlist.push_back(q);
-    /*basicBlock->num = controlFlowGraph->basicBlocks.size();
-    printBlock();
-    controlFlowGraph->basicBlocks.push_back(basicBlock);
-    basicBlock = new BasicBlock;*/
 }
 
 void BasicBlockConverter::visitQuadReturn(QuadReturn *q) {
     basicBlock->quadlist.push_back(q);
     basicBlock->num = controlFlowGraph->basicBlocks.size();
-   // printBlock();
     setMap();
     controlFlowGraph->basicBlocks.push_back(basicBlock);
     basicBlock = new BasicBlock;
@@ -115,7 +107,6 @@ void BasicBlockConverter::visitQuadReturn(QuadReturn *q) {
 void BasicBlockConverter::visitQuadReturnNoVal(QuadReturnNoVal *q) {
     basicBlock->quadlist.push_back(q);
     basicBlock->num = controlFlowGraph->basicBlocks.size();
-   // printBlock();
     setMap();
     controlFlowGraph->basicBlocks.push_back(basicBlock);
     basicBlock = new BasicBlock;

@@ -14,6 +14,8 @@ class CodeGenerator : public BaseVisitor {
 public:
     ControlFlowGraph *controlFlowGraph;
     Allocator *allocator;
+    BasicBlock *actualBasicBlock;
+    bool isBlockEndedWithJump;
 
     void generateCode();
 

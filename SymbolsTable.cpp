@@ -72,6 +72,7 @@ void SymbolsTable::addSymbol(Ident ident1, Ident ident2, String type) {
     symbolsSet.insert(ident2);
     temp.push(VarInfo(ident2, type, depth));
     symbolsMap[ident1] = temp;
+    allSymbolsMap.emplace(ident1, ident2);
 }
 
 String SymbolsTable::getSymbol(Ident ident1) {
@@ -88,7 +89,12 @@ String SymbolsTable::getNewSymbol(Ident ident) {
     symbolsMap.find(ident)->second.pop();
     varInfo.ident = newIdent;
     symbolsMap.find(ident)->second.push(varInfo);
+    allSymbolsMap.emplace(ident, newIdent);
     return newIdent;
 }
+
+SymbolsTable::SymbolsTable(int lastSymbol, int depth, const std::map<String, std::stack<VarInfo>> &symbolsMap,
+                           const std::set<String> &symbolsSet) : lastSymbol(lastSymbol), depth(depth),
+                                                                 symbolsMap(symbolsMap), symbolsSet(symbolsSet) {}
 
 VarInfo::VarInfo(const String &ident, const String &type, int depth) : ident(ident), type(type), depth(depth) {};

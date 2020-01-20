@@ -34,7 +34,7 @@ void ThreeAddressCodeConverter::visitDecl(Decl *p) {
 
 void ThreeAddressCodeConverter::visitAss(Ass *p) {
     p->expr_->accept(this);
-    Ident ident = symbolsTable->getNewSymbol(p->ident_);
+    Ident ident = symbolsTable->getSymbol(p->ident_);
     QuadCopy *copy =  new QuadCopy(ident, arg);
     quadBlk->quadlist->push_back(copy);
 }

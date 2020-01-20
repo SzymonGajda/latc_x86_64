@@ -40,6 +40,25 @@ void ControlFlowGraph::printCFG() {
     TACPrinter tacPrinter;
     for(BasicBlock *basicBlock : basicBlocks){
         std::cout<<"\n\nNEW BLOCK "<<basicBlock->num<<" "<<basicBlock->ident<<":\n";
+        std::cout<<"predecessors: ";
+        for(Integer pred : basicBlock->predecessors){
+            for(auto m : blockLabelsMap){
+                if(m.second == pred){
+                    std::cout<<m.first<<" ";
+                }
+            }
+        }
+        std::cout<<"\n";
+        std::cout<<"successors: ";
+        for(String s : basicBlock->successors){
+            std::cout<<s<<" ";
+        }
+        std::cout<<"\n";
+        std::cout<<"MEMORY MAP: \n";
+        for(auto m : basicBlock->memoryMap){
+            std::cout<<m.first<<" "<<m.second<<"\n";
+        }
+        std::cout<<"\n\n";
         int ind = -1;
         for(auto it = basicBlock->liveness.rbegin(); it!=basicBlock->liveness.rend();it++ ){
             std::cout<<ind<<": ";
@@ -58,5 +77,11 @@ void ControlFlowGraph::printCFG() {
         }
     }
 
+}
+
+void ControlFlowGraph::generateMemoryMap(SymbolsTable *symbolsTable) {
+    for(auto block : basicBlocks){
+        block->generateMemoryMap(symbolsTable);
+    }
 }
 
