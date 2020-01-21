@@ -7,10 +7,16 @@
 void ThreeAddressCodeConverter::visitFnDef(FnDef *p) {
     FunctionHeader functionHeader = functionHeaders->getHeader(p->ident_);
     symbolsTable->entryScope();
+    std::vector<Ident> newFunctionArgIdents;
     for (std::pair<String, String> pair : functionHeader.args) {
         String newSymbol = symbolsTable->getNewSymbol();
+        newFunctionArgIdents.push_back(newSymbol);
+        //functionHeaders->getHeader(p->ident_).newArgSymbols.emplace_back(newSymbol);
         symbolsTable->addSymbol(pair.second, newSymbol, pair.first);
     }
+    functionHeader.newArgSymbols = newFunctionArgIdents;
+    functionHeaders->removeHeader(p->ident_);
+    functionHeaders->add(functionHeader);
     quadBlk = new QuadBlk();
     QuadFunBegin *quadFunBegin = new QuadFunBegin(p->ident_);
     quadBlk->quadlist->push_back(quadFunBegin);

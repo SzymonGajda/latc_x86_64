@@ -20,6 +20,7 @@ public:
     String returnType;
     int lineNumber;
     std::vector<std::pair<String, String> > args;
+    std::vector<Ident> newArgSymbols;
 };
 
 class FunctionHeaders {
@@ -48,6 +49,8 @@ public:
     FunctionHeader getHeader(String ident, int lineNumber, Error &error);
 
     FunctionHeader getHeader(String ident);
+
+    void removeHeader(String Ident);
 };
 
 

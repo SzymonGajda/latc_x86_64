@@ -24,6 +24,7 @@ public:
     Location();
 
     bool operator<(const Location &other) const;
+
     int reg;
 };
 
@@ -49,12 +50,11 @@ public:
     BasicBlock *actualBasicBlock;
 
 
-
     void initRegisters();
 
     void initRegistersIdentMap();
 
-   // void writeLiveValues(std::map<Ident, LivenessInfo> liveVariables);
+    // void writeLiveValues(std::map<Ident, LivenessInfo> liveVariables);
 
     void copy(Ident ident1, Ident ident2);
 
@@ -87,25 +87,35 @@ public:
 
     void initValues();
 
+    void initFunArgs(std::vector<Ident> argIdents, std::map<Ident, LivenessInfo> liveVariables, std::map<Ident, int> actualBlockMemMap);
+
     int getFreeRegister(int exclude1, int exclude2);
 
     int getRegisterToSpill(int exclude1, int exclude2);
 
     void spillRegister(int reg);
 
-  /*  int getFreeMem();
+    void saveRegBeforeCall();
 
-    void addLocationToValue(Ident ident, bool isInReg, int desc);
+    void genParam(int paramNum, int val);
 
-    void addContentToRegister(int reg, Ident ident);
+    void genParam(int paramNum, Ident val);
 
-    void addContentToMem(int reg, Ident ident);
+    void genRetrieve(Ident ident);
 
-    void removeLocationFromValue(Ident ident, bool isInReg, int desc);
+    /*  int getFreeMem();
 
-    void removeContentFromRegister(int reg, Ident ident);
+      void addLocationToValue(Ident ident, bool isInReg, int desc);
 
-    void removeContentFromMem(int reg, Ident ident);*/
+      void addContentToRegister(int reg, Ident ident);
+
+      void addContentToMem(int reg, Ident ident);
+
+      void removeLocationFromValue(Ident ident, bool isInReg, int desc);
+
+      void removeContentFromRegister(int reg, Ident ident);
+
+      void removeContentFromMem(int reg, Ident ident);*/
 };
 
 

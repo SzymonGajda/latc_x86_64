@@ -38,7 +38,7 @@ void CodeGenerator::visitQuadCopy(QuadCopy *q) {
 
 void CodeGenerator::visitQuadJmp(QuadJmp *q) {
     isBlockEndedWithJump = true;
-   // allocator->writeLiveValues();
+    // allocator->writeLiveValues();
     allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
                                   (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
                                           q->label)->second]->memoryMap);
@@ -66,18 +66,34 @@ void CodeGenerator::visitQuadIf(QuadIf *q) {
             std::cout << "jmp " << q->label1 << "\n";
         }
     } else {
-        allocator->genIf(q->cond.var, q->label1, q->label2, *actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap, (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
-                q->label1)->second]->memoryMap, (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
-                q->label2)->second]->memoryMap);
+        allocator->genIf(q->cond.var, q->label1, q->label2, *actualBasicBlock->liveness.begin(),
+                         actualBasicBlock->memoryMap,
+                         (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
+                                 q->label1)->second]->memoryMap,
+                         (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
+                                 q->label2)->second]->memoryMap);
     }
 }
 
 void CodeGenerator::visitQuadParam(QuadParam *q) {
-    BaseVisitor::visitQuadParam(q);
+    isBlockEndedWithJump = true;
+    if (paramNum == -1 && !actualBasicBlock->successors.empty()) {
+        allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
+                                      (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
+                                              *actualBasicBlock->successors.begin())->second]->memoryMap);
+    }
+    if (q->arg.isValue) {
+        allocator->genParam(paramNum, q->arg.value);
+    } else {
+        allocator->genParam(paramNum, q->arg.var);
+    }
+    paramNum++;
 }
 
 void CodeGenerator::visitQuadCall(QuadCall *q) {
-    BaseVisitor::visitQuadCall(q);
+    isBlockEndedWithJump = true;
+    paramNum = -1;
+    std::cout<<"call "<<q->label<<"\n";
 }
 
 void CodeGenerator::visitQuadReturn(QuadReturn *q) {
@@ -89,16 +105,22 @@ void CodeGenerator::visitQuadReturn(QuadReturn *q) {
 }
 
 void CodeGenerator::visitQuadReturnNoVal(QuadReturnNoVal *q) {
+    std::cout<<"movq %rbp, %rsp\n";
+    std::cout<<"popq %rbp\n";
     std::cout << "ret\n";
 }
 
 void CodeGenerator::visitQuadRetrieve(QuadRetrieve *q) {
-    //BaseVisitor::visitQuadRetrieve(q);
-
+    allocator->genRetrieve(q->res);
 }
 
 void CodeGenerator::visitQuadFunBegin(QuadFunBegin *q) {
+    int numOfVariables = getNumOfLocalVariables(q->ident);
     std::cout << q->ident << ":" << "\n";
+    std::cout<<"pushq %rbp\n";
+    std::cout << "movq %rsp, %rbp\n";
+    std::cout<<"subq $"<<numOfVariables * 8<<", %rsp\n";
+    allocator->initFunArgs(functionHeaders->getHeader(q->ident).newArgSymbols, *actualBasicBlock->liveness.rbegin(), actualBasicBlock->memoryMap);
 }
 
 void CodeGenerator::generateCode() {
@@ -124,7 +146,7 @@ void CodeGenerator::generateCode() {
             ind++;
         }
         if (!isBlockEndedWithJump && !basicBlock->successors.empty()) {
-          //  allocator->writeLiveValues();
+            //  allocator->writeLiveValues();
             if (!actualBasicBlock->successors.empty()) {
                 allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
                                               (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
@@ -132,4 +154,14 @@ void CodeGenerator::generateCode() {
             }
         }
     }
+}
+
+int CodeGenerator::getNumOfLocalVariables(Ident funIdent) {
+    int max = 0;
+    for(auto basicBlock : controlFlowGraph->basicBlocks){
+        if(basicBlock->funIdent == funIdent && basicBlock->memoryMap.size() > max){
+            max = basicBlock->memoryMap.size();
+        }
+    }
+    return max;
 }

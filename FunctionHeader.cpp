@@ -158,6 +158,15 @@ FunctionHeader FunctionHeaders::getHeader(String ident) {
     return headers[0];
 }
 
+void FunctionHeaders::removeHeader(String ident) {
+    for(auto it = headers.begin(); it!= headers.end();it++){
+        if(it->ident == ident){
+            headers.erase(it);
+            return;
+        }
+    }
+}
+
 
 
 

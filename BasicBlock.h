@@ -39,6 +39,7 @@ public:
     std::map<Ident, LivenessInfo> outLiveVariable;
     Ident ident = "";
     std::map<Ident, int> memoryMap;
+    Ident funIdent = "";
     void generateMemoryMap(SymbolsTable *symbolsTable);
 
     std::map<Ident, LivenessInfo> calculateLiveness(std::map<Ident, LivenessInfo> out);

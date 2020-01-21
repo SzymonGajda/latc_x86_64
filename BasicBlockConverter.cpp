@@ -16,6 +16,7 @@ void BasicBlockConverter::visitProg(Prog *q) {
    // controlFlowGraph->printCFG();
     CodeGenerator codeGenerator;
     codeGenerator.controlFlowGraph = controlFlowGraph;
+    codeGenerator.functionHeaders = functionHeaders;
     codeGenerator.allocator = new Allocator;
     codeGenerator.allocator->symbolsTable = symbolsTable;
     codeGenerator.generateCode();
@@ -31,11 +32,13 @@ void BasicBlockConverter::visitQuadBlk(QuadBlk *q) {
 }
 
 void BasicBlockConverter::visitQuadFunBegin(QuadFunBegin *q) {
+    actualFun= q->ident;
     if (!basicBlock->quadlist.empty()) {
         basicBlock->num = controlFlowGraph->basicBlocks.size();
         setMap();
         controlFlowGraph->basicBlocks.push_back(basicBlock);
         basicBlock = new BasicBlock;
+        basicBlock->funIdent = actualFun;
         basicBlock->ident = q->ident;
     }
     else{
@@ -65,6 +68,7 @@ void BasicBlockConverter::visitQuadJmp(QuadJmp *q) {
     setMap();
     controlFlowGraph->basicBlocks.push_back(basicBlock);
     basicBlock = new BasicBlock;
+    basicBlock->funIdent = actualFun;
 }
 
 void BasicBlockConverter::visitQuadLabel(QuadLabel *q) {
@@ -74,6 +78,7 @@ void BasicBlockConverter::visitQuadLabel(QuadLabel *q) {
         setMap();
         controlFlowGraph->basicBlocks.push_back(basicBlock);
         basicBlock = new BasicBlock;
+        basicBlock->funIdent = actualFun;
         basicBlock->ident = q->label;
     }
     else{
@@ -102,6 +107,7 @@ void BasicBlockConverter::visitQuadReturn(QuadReturn *q) {
     setMap();
     controlFlowGraph->basicBlocks.push_back(basicBlock);
     basicBlock = new BasicBlock;
+    basicBlock->funIdent = actualFun;
 }
 
 void BasicBlockConverter::visitQuadReturnNoVal(QuadReturnNoVal *q) {
@@ -110,6 +116,7 @@ void BasicBlockConverter::visitQuadReturnNoVal(QuadReturnNoVal *q) {
     setMap();
     controlFlowGraph->basicBlocks.push_back(basicBlock);
     basicBlock = new BasicBlock;
+    basicBlock->funIdent = actualFun;
 }
 
 void BasicBlockConverter::visitQuadRetrieve(QuadRetrieve *q) {

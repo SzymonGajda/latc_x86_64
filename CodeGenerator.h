@@ -9,6 +9,7 @@
 #include "BaseVisitor.H"
 #include "ControlFlowGraph.h"
 #include "Allocator.h"
+#include "FunctionHeader.h"
 
 class CodeGenerator : public BaseVisitor {
 public:
@@ -16,6 +17,11 @@ public:
     Allocator *allocator;
     BasicBlock *actualBasicBlock;
     bool isBlockEndedWithJump;
+    Ident actualFun;
+    FunctionHeaders *functionHeaders;
+    int paramNum = -1;
+
+    int getNumOfLocalVariables(Ident funIdent);
 
     void generateCode();
 

@@ -10,6 +10,7 @@
 #include "ControlFlowGraph.h"
 #include "BaseVisitor.H"
 #include "SymbolsTable.h"
+#include "FunctionHeader.h"
 
 class BasicBlockConverter : public BaseVisitor{
 public:
@@ -20,6 +21,10 @@ public:
     TACPrinter *tacPrinter;
 
     SymbolsTable *symbolsTable;
+
+    FunctionHeaders *functionHeaders;
+
+    Ident actualFun = "";
 
     void printBlock();
 
