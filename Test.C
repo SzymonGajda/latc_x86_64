@@ -15,6 +15,7 @@
 #include "ThreeAddressCodeConverter.h"
 #include "TACPrinter.h"
 #include "BasicBlockConverter.h"
+#include "CodeGenerator.h"
 
 int main(int argc, char **argv) {
     FILE *input;
@@ -28,7 +29,7 @@ int main(int argc, char **argv) {
     /* The default entry point is used. For other options see Parser.H */
     Program *parse_tree = pProgram(input);
     if (parse_tree) {
-        FunctionHeaders *functionHeaders = new FunctionHeaders;
+        auto *functionHeaders = new FunctionHeaders;
         TopDefAnalyser topDefAnalyser;
         topDefAnalyser.functionHeaders = functionHeaders;
         parse_tree->accept(&topDefAnalyser);
@@ -37,24 +38,28 @@ int main(int argc, char **argv) {
             return 0;
         }
         SemanticAnalyser semanticAnalyser;
-        Error *error = new Error;
-        SymbolsTable *symbolsTable = new SymbolsTable;
+        auto *error = new Error;
+        auto *symbolsTable = new SymbolsTable;
         semanticAnalyser.functionHeaders = functionHeaders;
         semanticAnalyser.symbolsTable = symbolsTable;
         semanticAnalyser.error = error;
         parse_tree->accept(&semanticAnalyser);
+        delete symbolsTable;
         if (semanticAnalyser.error->isError) {
             std::cout << semanticAnalyser.error->getErrorMessage();
+            delete error;
             return 0;
         }
-        ThreeAddressCodeConverter *threeAddressCodeConverter = new ThreeAddressCodeConverter;
+        delete error;
+        auto *threeAddressCodeConverter = new ThreeAddressCodeConverter;
         threeAddressCodeConverter->functionHeaders = functionHeaders;
         symbolsTable = new SymbolsTable;
         threeAddressCodeConverter->symbolsTable = symbolsTable;
         parse_tree->accept(threeAddressCodeConverter);
-        TACPrinter tacPrinter =  TACPrinter();
-       // parse_tree->accept(&tacPrinter);
-        BasicBlockConverter *basicBlockConverter = new BasicBlockConverter;
+        // TACPrinter tacPrinter =  TACPrinter();
+        // parse_tree->accept(&tacPrinter);
+
+        auto *basicBlockConverter = new BasicBlockConverter;
         basicBlockConverter->controlFlowGraph = new ControlFlowGraph;
         basicBlockConverter->stringValues = threeAddressCodeConverter->stringValues;
         basicBlockConverter->basicBlock = new BasicBlock;
@@ -62,8 +67,24 @@ int main(int argc, char **argv) {
         basicBlockConverter->functionHeaders = functionHeaders;
         basicBlockConverter->symbolsTable = symbolsTable;
         parse_tree->accept(basicBlockConverter);
-        //parse_tree->accept(&tacPrinter);
 
+        CodeGenerator codeGenerator;
+        codeGenerator.controlFlowGraph = basicBlockConverter->controlFlowGraph;
+        codeGenerator.stringValues = basicBlockConverter->stringValues;
+        codeGenerator.functionHeaders = functionHeaders;
+        codeGenerator.allocator = new Allocator;
+        codeGenerator.allocator->symbolsTable = symbolsTable;
+        codeGenerator.generateCode();
+
+        basicBlockConverter->controlFlowGraph->deleteCFG();
+        delete codeGenerator.allocator;
+        delete symbolsTable;
+        delete threeAddressCodeConverter;
+        delete functionHeaders;
+        delete basicBlockConverter->controlFlowGraph;
+        delete basicBlockConverter->tacPrinter;
+        delete basicBlockConverter->basicBlock;
+        delete basicBlockConverter;
         return 0;
     }
     return 1;

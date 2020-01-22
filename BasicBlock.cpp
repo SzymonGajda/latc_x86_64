@@ -21,8 +21,9 @@ std::map<Ident, LivenessInfo> BasicBlock::calculateLiveness(std::map<Ident, Live
             LivenessInfo livenessInfo = it->second;
             livenessInfo.nextUse++;
             //temp[it->first] = livenessInfo;
-            temp.erase(it->first);
-            temp.emplace(livenessInfo.ident, livenessInfo);
+           // temp.erase(it->first);
+           // temp.emplace(livenessInfo.ident, livenessInfo);
+           temp.find(it->first)->second = livenessInfo;
         }
         for (auto it = livenessAnalyser.destroyed.begin(); it != livenessAnalyser.destroyed.end(); it++) {
             if (temp.find((*it)) != temp.end()) {

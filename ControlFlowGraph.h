@@ -18,6 +18,7 @@ public:
     void calculateDataFlow();
     void generateMemoryMap(SymbolsTable *symbolsTable);
     void printCFG();
+    void deleteCFG();
 };
 
 

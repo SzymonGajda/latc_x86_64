@@ -85,3 +85,13 @@ void ControlFlowGraph::generateMemoryMap(SymbolsTable *symbolsTable) {
     }
 }
 
+void ControlFlowGraph::deleteCFG() {
+    for(int i = 0; i<basicBlocks.size(); i++){
+        for(int i2 = 0; i2 < basicBlocks[i]->quadlist.size(); i2++){
+            delete basicBlocks[i]->quadlist[i2];
+        }
+            delete basicBlocks[i];
+    }
+
+}
+
