@@ -13,9 +13,10 @@ void BasicBlockConverter::visitProg(Prog *q) {
     setEdges();
     controlFlowGraph->calculateDataFlow();
     controlFlowGraph->generateMemoryMap(symbolsTable);
-   // controlFlowGraph->printCFG();
+  //  controlFlowGraph->printCFG();
     CodeGenerator codeGenerator;
     codeGenerator.controlFlowGraph = controlFlowGraph;
+    codeGenerator.stringValues = stringValues;
     codeGenerator.functionHeaders = functionHeaders;
     codeGenerator.allocator = new Allocator;
     codeGenerator.allocator->symbolsTable = symbolsTable;
@@ -23,6 +24,9 @@ void BasicBlockConverter::visitProg(Prog *q) {
 }
 
 void BasicBlockConverter::visitQuadBlk(QuadBlk *q) {
+    if(!basicBlock->quadlist.empty()){
+        basicBlock = new BasicBlock;
+    }
     for (auto it = q->quadlist->begin(); it != q->quadlist->end(); it++) {
         (*it)->accept(this);
     }
@@ -43,6 +47,7 @@ void BasicBlockConverter::visitQuadFunBegin(QuadFunBegin *q) {
     }
     else{
         basicBlock->ident = q->ident;
+        basicBlock->funIdent = actualFun;
     }
     basicBlock->quadlist.push_back(q);
 }
@@ -83,6 +88,7 @@ void BasicBlockConverter::visitQuadLabel(QuadLabel *q) {
     }
     else{
         basicBlock->ident = q->label;
+        basicBlock->funIdent = actualFun;
     }
     basicBlock->quadlist.push_back(q);
 }

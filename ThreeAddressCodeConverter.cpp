@@ -23,6 +23,10 @@ void ThreeAddressCodeConverter::visitFnDef(FnDef *p) {
     p->block_->accept(this);
     symbolsTable->exitScope();
     delete p->block_;
+    if(functionHeader.returnType == "void"){
+        QuadReturnNoVal *quadReturnNoVal = new QuadReturnNoVal;
+        quadBlk->quadlist->push_back(quadReturnNoVal);
+    }
     p->block_ = quadBlk;
 }
 
@@ -148,7 +152,13 @@ void ThreeAddressCodeConverter::visitFun(Fun *p) {
 }
 
 void ThreeAddressCodeConverter::visitEVar(EVar *p) {
-    QuadArg q = QuadArg(false, 0, symbolsTable->getSymbol(p->ident_));
+    QuadArg q;
+    if(symbolsTable->getType(p->ident_) == "string") {
+        q = QuadArg(false, "", symbolsTable->getSymbol(p->ident_));
+    }
+    else{
+         q = QuadArg(false, 0, symbolsTable->getSymbol(p->ident_));
+    }
     arg = q;
 }
 
@@ -184,8 +194,14 @@ void ThreeAddressCodeConverter::visitEApp(EApp *p) {
 }
 
 void ThreeAddressCodeConverter::visitEString(EString *p) {
-//    Quadruple q = new Quadruple(new Ass(), )
-
+    Ident ident1 = symbolsTable->getNewSymbol();
+    Ident ident2 = symbolsTable->getNewSymbol();
+    stringValues.emplace_back(ident1, p->string_);
+    QuadArg q = QuadArg(true, ident1, "");
+    QuadCopy *quadCopy = new QuadCopy(ident2, q);
+    quadBlk->quadlist->push_back(quadCopy);
+    QuadArg q2 = QuadArg(false, "", ident2);
+    arg = q2;
 }
 
 void ThreeAddressCodeConverter::visitNeg(Neg *p) {
@@ -227,7 +243,12 @@ void ThreeAddressCodeConverter::visitEAdd(EAdd *p) {
     QuadArg quadArg2 = arg;
     QuadAss2 *quadAss2 = new QuadAss2(ident, quadArg1, quadArg2, addOp);
     quadBlk->quadlist->push_back(quadAss2);
-    arg = QuadArg(false, 0, ident);
+    if(quadArg1.type == "string") {
+        arg = QuadArg(false, "", ident);
+    }
+    else{
+        arg = QuadArg(false, 0, ident);
+    }
 }
 
 void ThreeAddressCodeConverter::visitERel(ERel *p) {
@@ -238,7 +259,7 @@ void ThreeAddressCodeConverter::visitERel(ERel *p) {
     QuadArg quadArg1 = arg;
     p->expr_2->accept(this);
     QuadArg quadArg2 = arg;
-    QuadAss2 *quadAss2 = new QuadAss2(ident, quadArg1, quadArg2, op);
+    QuadAss2 *quadAss2 = new QuadAss2(ident, quadArg1, quadArg2, relOp);
     quadBlk->quadlist->push_back(quadAss2);
     arg = QuadArg(false, 0, ident);
 }
@@ -350,6 +371,14 @@ void ThreeAddressCodeConverter::visitIdent(Ident x) {
 void ThreeAddressCodeConverter::visitNoInit(NoInit *p) {
     Ident ident = symbolsTable->getNewSymbol();
     symbolsTable->addSymbol(p->ident_, ident, declType);
+    if(declType == "int"){
+        QuadCopy *copy = new QuadCopy(ident, QuadArg(true, 0, ""));
+        quadBlk->quadlist->push_back(copy);
+    }
+    if(declType == "bool"){
+        QuadCopy *copy = new QuadCopy(ident, QuadArg(true, 0, ""));
+        quadBlk->quadlist->push_back(copy);
+    }
 }
 
 void ThreeAddressCodeConverter::visitInit(Init *p) {

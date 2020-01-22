@@ -39,6 +39,7 @@ public:
     void addLabel(Ident ident);
     String getSymbol(Ident ident1);
     String getType(Ident ident, int lineNumber, Error &error);
+    String getType(Ident ident);
     void entryScope();
     void exitScope();
     String getNewSymbol();

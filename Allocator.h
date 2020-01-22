@@ -30,10 +30,12 @@ public:
 
 class ValueDescription {
 public:
+    String type;
     Ident ident;
     bool isValue;
     bool isSaved = true;
     int value;
+    String stringValue;
     std::set<Location> locations;
 };
 
@@ -54,11 +56,17 @@ public:
 
     void initRegistersIdentMap();
 
-    // void writeLiveValues(std::map<Ident, LivenessInfo> liveVariables);
+    void writeLiveValues();
+
+    void clearRegistersInfo();
 
     void copy(Ident ident1, Ident ident2);
 
     void copy(Ident ident1, int val);
+
+    void copyString(Ident ident1, String val);
+
+    void addString(Ident res, Ident s1, Ident s2);
 
     void removeDeadValues(std::map<Ident, LivenessInfo> liveValues);
 
@@ -83,9 +91,11 @@ public:
     void genRet(int retVal);
 
     void moveLocalVariables(std::map<Ident, LivenessInfo> liveVariables, std::map<Ident, int> actualBlockMemMap,
-                            std::map<Ident, int> nextBlockMemMap);
+                            std::map<Ident, int> nextBlockMemMap, bool isAfterCall);
 
     void initValues();
+
+    void saveRax();
 
     void initFunArgs(std::vector<Ident> argIdents, std::map<Ident, LivenessInfo> liveVariables, std::map<Ident, int> actualBlockMemMap);
 

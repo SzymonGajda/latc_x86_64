@@ -17,6 +17,7 @@ public:
     QuadBlk *quadBlk;
     FunctionHeaders *functionHeaders;
     SymbolsTable *symbolsTable;
+    std::vector<std::pair<String, String> > stringValues;
 
     QuadArg arg;
     int value;

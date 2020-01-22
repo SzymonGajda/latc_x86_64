@@ -450,8 +450,11 @@ public:
 class QuadArg {
 public:
     QuadArg(bool isValue, int value, const String &var);
+    QuadArg(bool isValue, String stringValue, const String &var);
     QuadArg();
     bool isValue;
+    String type;
+    String stringValue;
     int value;
     String var;
 };

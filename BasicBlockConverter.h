@@ -24,6 +24,9 @@ public:
 
     FunctionHeaders *functionHeaders;
 
+    std::vector<std::pair<String, String> > stringValues;
+
+
     Ident actualFun = "";
 
     void printBlock();

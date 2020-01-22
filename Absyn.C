@@ -2016,13 +2016,17 @@ QuadReturn::QuadReturn(const QuadArg &ret) : ret(ret) {}
 
 
 /******************   QuadArg   **********************/
-QuadArg::QuadArg(bool isValue, int value, const String &var) : isValue(isValue), value(value), var(var) {}
+QuadArg::QuadArg(bool isValue, int value, const String &var) : isValue(isValue), value(value), var(var), type("int") {}
 
 QuadArg::QuadArg() {
     isValue = false;
+    type = "int";
+    stringValue = "";
     value = 0;
     var = "";
-};
+}
+
+QuadArg::QuadArg(bool isValue, String value, const String &var) : isValue(isValue), stringValue(value), var(var), type("string") {}
 
 
 /*****************   QuadReturnNoVal    ***********************/

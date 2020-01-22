@@ -24,13 +24,23 @@ void CodeGenerator::visitQuadAss2(QuadAss2 *q) {
         allocator->genAss2(q->res, q->arg1.value, q->arg2.var, q->op);
     }
     if (!q->arg1.isValue && !q->arg2.isValue) {
-        allocator->genAss2(q->res, q->arg1.var, q->arg2.var, q->op);
+        if(q->arg1.type == "string"){
+            allocator->addString(q->res, q->arg1.var, q->arg2.var);
+        }
+        else {
+            allocator->genAss2(q->res, q->arg1.var, q->arg2.var, q->op);
+        }
     }
 }
 
 void CodeGenerator::visitQuadCopy(QuadCopy *q) {
     if (q->arg.isValue) {
-        allocator->copy(q->res, q->arg.value);
+        if(q->arg.type == "string"){
+            allocator->copyString(q->res, q->arg.stringValue);
+        }
+        else {
+            allocator->copy(q->res, q->arg.value);
+        }
     } else {
         allocator->copy(q->res, q->arg.var);
     }
@@ -41,7 +51,7 @@ void CodeGenerator::visitQuadJmp(QuadJmp *q) {
     // allocator->writeLiveValues();
     allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
                                   (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
-                                          q->label)->second]->memoryMap);
+                                          q->label)->second]->memoryMap, false);
     std::cout << q->jmpOp << " " << q->label << "\n";
 }
 
@@ -56,13 +66,13 @@ void CodeGenerator::visitQuadIf(QuadIf *q) {
             //allocator->writeLiveValues();
             allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
                                           (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
-                                                  q->label2)->second]->memoryMap);
+                                                  q->label2)->second]->memoryMap, false);
             std::cout << "jmp " << q->label2 << "\n";
         } else {
             //allocator->writeLiveValues();
             allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
                                           (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
-                                                  q->label1)->second]->memoryMap);
+                                                  q->label1)->second]->memoryMap, false);
             std::cout << "jmp " << q->label1 << "\n";
         }
     } else {
@@ -76,11 +86,9 @@ void CodeGenerator::visitQuadIf(QuadIf *q) {
 }
 
 void CodeGenerator::visitQuadParam(QuadParam *q) {
-    isBlockEndedWithJump = true;
+   // isBlockEndedWithJump = true;
     if (paramNum == -1 && !actualBasicBlock->successors.empty()) {
-        allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
-                                      (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
-                                              *actualBasicBlock->successors.begin())->second]->memoryMap);
+        allocator->writeLiveValues();
     }
     if (q->arg.isValue) {
         allocator->genParam(paramNum, q->arg.value);
@@ -91,9 +99,13 @@ void CodeGenerator::visitQuadParam(QuadParam *q) {
 }
 
 void CodeGenerator::visitQuadCall(QuadCall *q) {
-    isBlockEndedWithJump = true;
+   // isBlockEndedWithJump = true;
     paramNum = -1;
     std::cout<<"call "<<q->label<<"\n";
+    if(functionHeaders->getHeader(q->label).returnType == "void"){
+        allocator->clearRegistersInfo();
+    }
+    isAfterCall = true;
 }
 
 void CodeGenerator::visitQuadReturn(QuadReturn *q) {
@@ -112,6 +124,8 @@ void CodeGenerator::visitQuadReturnNoVal(QuadReturnNoVal *q) {
 
 void CodeGenerator::visitQuadRetrieve(QuadRetrieve *q) {
     allocator->genRetrieve(q->res);
+    allocator->saveRax();
+    allocator->clearRegistersInfo();
 }
 
 void CodeGenerator::visitQuadFunBegin(QuadFunBegin *q) {
@@ -130,8 +144,12 @@ void CodeGenerator::generateCode() {
                  ".extern printString\n"
                  ".extern readInt\n"
                  ".extern readString\n"
-                 ".text\n"
-                 ".globl main\n";
+                 ".extern concat\n"
+                 ".text\n";
+    for(auto stringPair: stringValues){
+        std::cout<<stringPair.first<<":\n.ascii \""<<stringPair.second<<"\\0\"\n";
+    }
+    std::cout<<".globl main\n";
     for (BasicBlock *basicBlock : controlFlowGraph->basicBlocks) {
         int ind = -1;
         actualBasicBlock = basicBlock;
@@ -150,9 +168,10 @@ void CodeGenerator::generateCode() {
             if (!actualBasicBlock->successors.empty()) {
                 allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
                                               (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
-                                                      *actualBasicBlock->successors.begin())->second]->memoryMap);
+                                                      *actualBasicBlock->successors.begin())->second]->memoryMap, isAfterCall);
             }
         }
+        isAfterCall = false;
     }
 }
 

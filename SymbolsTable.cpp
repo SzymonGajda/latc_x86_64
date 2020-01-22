@@ -97,4 +97,8 @@ SymbolsTable::SymbolsTable(int lastSymbol, int depth, const std::map<String, std
                            const std::set<String> &symbolsSet) : lastSymbol(lastSymbol), depth(depth),
                                                                  symbolsMap(symbolsMap), symbolsSet(symbolsSet) {}
 
+String SymbolsTable::getType(Ident ident) {
+    return symbolsMap.find(ident)->second.top().type;
+}
+
 VarInfo::VarInfo(const String &ident, const String &type, int depth) : ident(ident), type(type), depth(depth) {};
