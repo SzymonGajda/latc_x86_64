@@ -798,7 +798,7 @@ void Allocator::genIf(Ident cond, Ident label1, Ident label2, std::map<Ident, Li
             int varLocation = actualBasicBlock->memoryMap.find(cond)->second;
             std::cout << "cmp $0, " << (varLocation + 1) * -8 << "(%rbp)\n";
             std::cout << "je " << l2 << "\n";
-            std::cout << "jne" << l1 << "\n";
+            std::cout << "jne " << l1 << "\n";
             std::cout << l2 << ": \n";
             // writeLiveValues();
             moveLocalVariables(liveVariables, actualBlockMemMap, nextBlockMemMapLabel2, false);
@@ -1001,6 +1001,7 @@ void Allocator::addString(Ident res, Ident s1, Ident s2) {
             registers.find(location.reg)->second.isFree = true;
         }
     }
+    writeLiveValues();
     if (!registers.find(5)->second.isFree) {
         spillRegister(5);
     }
@@ -1035,6 +1036,8 @@ void Allocator::addString(Ident res, Ident s1, Ident s2) {
     location1.reg = resReg;
     values.find(res)->second.locations.insert(location1);
     values.find(res)->second.type = "string";
+    saveRax();
+    clearRegistersInfo();
 }
 
 void Allocator::saveRax() {

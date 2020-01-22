@@ -215,8 +215,10 @@ void ThreeAddressCodeConverter::visitNeg(Neg *p) {
 void ThreeAddressCodeConverter::visitNot(Not *p) {
     p->expr_->accept(this);
     Ident res = symbolsTable->getNewSymbol();
-    QuadAss1 *quadAss1 = new QuadAss1(res, arg, "not");
-    quadBlk->quadlist->push_back(quadAss1);
+    //QuadAss1 *quadAss1 = new QuadAss1(res, arg, "not");
+    //quadBlk->quadlist->push_back(quadAss1);
+    QuadAss2 *quadAss2 = new QuadAss2(res, arg, QuadArg(true, 1, ""), "xor");
+    quadBlk->quadlist->push_back(quadAss2);
     arg = QuadArg(false, 0, res);
 }
 
@@ -265,11 +267,79 @@ void ThreeAddressCodeConverter::visitERel(ERel *p) {
 }
 
 void ThreeAddressCodeConverter::visitEAnd(EAnd *p) {
-    op = "and";
+    Ident firstCondTrueLabel = symbolsTable->getNewSymbol();
+    Ident trueLabel = symbolsTable->getNewSymbol();
+    Ident falseLabel = symbolsTable->getNewSymbol();
+    Ident endLabel = symbolsTable->getNewSymbol();
+    Ident res = symbolsTable->getNewSymbol();
+    Ident cond = symbolsTable->getNewSymbol();
+    p->expr_1->accept(this);
+    QuadArg quadArgTrue = QuadArg(true, 1, "");
+    QuadAss2 *quadAss2 = new QuadAss2(cond, arg, quadArgTrue, "je");
+    QuadArg quadArgCond1 = QuadArg(false, 1, cond);
+    quadBlk->quadlist->push_back(quadAss2);
+    QuadIf *quadIf = new QuadIf(quadArgCond1, firstCondTrueLabel, falseLabel);
+    quadBlk->quadlist->push_back(quadIf);
+    QuadLabel *quadLabelFirstCondTrue = new QuadLabel(firstCondTrueLabel);
+    quadBlk->quadlist->push_back(quadLabelFirstCondTrue);
+    p->expr_2->accept(this);
+
+    QuadAss2 *quadAss22 = new QuadAss2(cond, arg, quadArgTrue, "je");
+    quadBlk->quadlist->push_back(quadAss22);
+    QuadIf *quadIf2 = new QuadIf(quadArgCond1, trueLabel, falseLabel);
+    quadBlk->quadlist->push_back(quadIf2);
+
+    QuadLabel *quadLabelTrue= new QuadLabel(trueLabel);
+    quadBlk->quadlist->push_back(quadLabelTrue);
+    QuadCopy *quadCopyTrue = new QuadCopy(res, QuadArg(true, 1, ""));
+    quadBlk->quadlist->push_back(quadCopyTrue);
+    QuadJmp *quadJmpEnd = new QuadJmp(endLabel, "jmp");
+    quadBlk->quadlist->push_back(quadJmpEnd);
+    QuadLabel *quadLabelFalse= new QuadLabel(falseLabel);
+    quadBlk->quadlist->push_back(quadLabelFalse);
+    QuadCopy *quadCopyFalse = new QuadCopy(res, QuadArg(true, 0, ""));
+    quadBlk->quadlist->push_back(quadCopyFalse);
+    QuadLabel *quadLabelEnd= new QuadLabel(endLabel);
+    quadBlk->quadlist->push_back(quadLabelEnd);
+    arg = QuadArg(false, 0, res);
 }
 
 void ThreeAddressCodeConverter::visitEOr(EOr *p) {
-    op = "or";
+    Ident firstCondFalseLabel = symbolsTable->getNewSymbol();
+    Ident trueLabel = symbolsTable->getNewSymbol();
+    Ident falseLabel = symbolsTable->getNewSymbol();
+    Ident endLabel = symbolsTable->getNewSymbol();
+    Ident res = symbolsTable->getNewSymbol();
+    Ident cond = symbolsTable->getNewSymbol();
+    p->expr_1->accept(this);
+    QuadArg quadArgTrue = QuadArg(true, 1, "");
+    QuadAss2 *quadAss2 = new QuadAss2(cond, arg, quadArgTrue, "je");
+    QuadArg quadArgCond1 = QuadArg(false, 1, cond);
+    quadBlk->quadlist->push_back(quadAss2);
+    QuadIf *quadIf = new QuadIf(quadArgCond1, trueLabel, firstCondFalseLabel);
+    quadBlk->quadlist->push_back(quadIf);
+    QuadLabel *quadLabelFirstCondFalse = new QuadLabel(firstCondFalseLabel);
+    quadBlk->quadlist->push_back(quadLabelFirstCondFalse);
+    p->expr_2->accept(this);
+
+    QuadAss2 *quadAss22 = new QuadAss2(cond, arg, quadArgTrue, "je");
+    quadBlk->quadlist->push_back(quadAss22);
+    QuadIf *quadIf2 = new QuadIf(quadArgCond1, trueLabel, falseLabel);
+    quadBlk->quadlist->push_back(quadIf2);
+
+    QuadLabel *quadLabelTrue= new QuadLabel(trueLabel);
+    quadBlk->quadlist->push_back(quadLabelTrue);
+    QuadCopy *quadCopyTrue = new QuadCopy(res, QuadArg(true, 1, ""));
+    quadBlk->quadlist->push_back(quadCopyTrue);
+    QuadJmp *quadJmpEnd = new QuadJmp(endLabel, "jmp");
+    quadBlk->quadlist->push_back(quadJmpEnd);
+    QuadLabel *quadLabelFalse= new QuadLabel(falseLabel);
+    quadBlk->quadlist->push_back(quadLabelFalse);
+    QuadCopy *quadCopyFalse = new QuadCopy(res, QuadArg(true, 0, ""));
+    quadBlk->quadlist->push_back(quadCopyFalse);
+    QuadLabel *quadLabelEnd= new QuadLabel(endLabel);
+    quadBlk->quadlist->push_back(quadLabelEnd);
+    arg = QuadArg(false, 0, res);
 }
 
 void ThreeAddressCodeConverter::visitPlus(Plus *p) {
@@ -382,9 +452,9 @@ void ThreeAddressCodeConverter::visitNoInit(NoInit *p) {
 }
 
 void ThreeAddressCodeConverter::visitInit(Init *p) {
+    p->expr_->accept(this);
     Ident ident = symbolsTable->getNewSymbol();
     symbolsTable->addSymbol(p->ident_, ident, declType);
-    p->expr_->accept(this);
     QuadCopy *copy = new QuadCopy(ident, arg);
     quadBlk->quadlist->push_back(copy);
 }

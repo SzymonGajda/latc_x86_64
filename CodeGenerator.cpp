@@ -100,6 +100,9 @@ void CodeGenerator::visitQuadParam(QuadParam *q) {
 
 void CodeGenerator::visitQuadCall(QuadCall *q) {
    // isBlockEndedWithJump = true;
+    if (paramNum == -1 && !actualBasicBlock->successors.empty()) {
+        allocator->writeLiveValues();
+    }
     paramNum = -1;
     std::cout<<"call "<<q->label<<"\n";
     if(functionHeaders->getHeader(q->label).returnType == "void"){
