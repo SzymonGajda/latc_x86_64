@@ -18,6 +18,7 @@ void Allocator::copy(Ident ident1, Ident ident2) {
         registers.erase(location.reg);
         registers.emplace(location.reg, registerDescription);
     }
+
     valueDescription1.locations.clear();
 
     if (valueDescription2.isValue) {
@@ -57,6 +58,7 @@ void Allocator::copy(Ident ident1, Ident ident2) {
         values.find(ident1)->second.isSaved = false;
         values.find(ident1)->second.type = values.find(ident2)->second.type;
     }
+    saveValue(ident1);
 }
 
 void Allocator::removeDeadValues(std::map<Ident, LivenessInfo> liveValues) {
@@ -107,6 +109,7 @@ void Allocator::copy(Ident ident1, int val) {
     valueDescription1.type = "int";
     values.erase(ident1);
     values.emplace(ident1, valueDescription1);
+    saveValue(ident1);
 }
 
 void Allocator::copyString(Ident ident1, String val) {
@@ -138,6 +141,7 @@ void Allocator::copyString(Ident ident1, String val) {
     valueDescription1.type = "string";
     values.erase(ident1);
     values.emplace(ident1, valueDescription1);
+    saveValue(ident1);
 }
 
 
@@ -165,6 +169,9 @@ void Allocator::genAss1(Ident res, Ident arg, String op) {
                 resReg = location.reg;
                 break;
             }
+        }
+        if (registerAllocationMap.find(arg)->second != -1) {
+            argReg = registerAllocationMap.find(arg)->second;
         }
         if (registerAllocationMap.find(res)->second != -1) {
             resReg = registerAllocationMap.find(res)->second;
@@ -201,6 +208,7 @@ void Allocator::genAss1(Ident res, Ident arg, String op) {
     location1.reg = resReg;
     values.find(res)->second.locations.insert(location1);
     values.find(res)->second.type = "int";
+    saveValue(res);
 }
 
 void Allocator::genAss1(Ident res, int val, String op) {
@@ -226,6 +234,7 @@ void Allocator::genAss1(Ident res, int val, String op) {
     location1.reg = resReg;
     values.find(res)->second.locations.insert(location1);
     values.find(res)->second.type = "int";
+    saveValue(res);
 }
 
 int Allocator::getFreeRegister(int exclude1, int exclude2) {
@@ -270,8 +279,10 @@ int Allocator::getRegisterToSpill(int exclude1, int exclude2) {
 void Allocator::spillRegister(int reg) {
     if (reg < numOfRegisters) {
         for (auto val : registers.find(reg)->second.contents) {
-            if (actualBasicBlock->memoryMap.find(val) != actualBasicBlock->memoryMap.end() &&
-                !values.find(val)->second.isSaved) {
+            if (registerAllocationMap.find(val)->second != -1 && !values.find(val)->second.isSaved) {
+                std::cout<<"movq %"<<registersIdentMap.find(reg)->second<<", %"<<registersIdentMap.find(registerAllocationMap.find(val)->second)->second<<"\n";
+            } else if (actualBasicBlock->memoryMap.find(val) != actualBasicBlock->memoryMap.end() &&
+                       !values.find(val)->second.isSaved) {
                 int varLocation = actualBasicBlock->memoryMap.find(val)->second;
                 std::cout << "movq %" << registersIdentMap.find(reg)->second << ", " << (varLocation + 1) * -8
                           << "(%rbp)\n";
@@ -363,6 +374,13 @@ void Allocator::genAss2(Ident res, int val1, int val2, String op) {
             resReg = registerAllocationMap.find(res)->second;
         }
     }
+    if (op == "idiv") {
+        if (registerAllocationMap.find(res)->second == -1) {
+            std::cout << "movq %" << registersIdentMap.find(0)->second << ", %"
+                      << registersIdentMap.find(registerAllocationMap.find(res)->second)->second << "\n";
+            resReg = registerAllocationMap.find(res)->second;
+        }
+    }
     if (op == "cmp") {
         Ident trueLabel = symbolsTable->getNewSymbol();
         Ident endLabel = symbolsTable->getNewSymbol();
@@ -388,6 +406,7 @@ void Allocator::genAss2(Ident res, int val1, int val2, String op) {
     values.find(res)->second.locations.insert(location1);
     values.find(res)->second.isValue = false;
     values.find(res)->second.type = "int";
+    saveValue(res);
 }
 
 void Allocator::genAss2(Ident res, Ident arg1, int val2, String op) {
@@ -420,6 +439,10 @@ void Allocator::genAss2(Ident res, Ident arg1, int val2, String op) {
         resReg = 0;
     }
 
+    if (registerAllocationMap.find(arg1)->second != -1) {
+        saveValue(arg1);
+    }
+
     if (values.find(arg1)->second.isValue) {
         if (op == "idiv" || op == "mod") {
             std::cout << "movq $" << values.find(arg1)->second.value << ", %" << registersIdentMap.find(resReg)->second
@@ -431,6 +454,9 @@ void Allocator::genAss2(Ident res, Ident arg1, int val2, String op) {
                       << "\n";
         }
     } else {
+        if (registerAllocationMap.find(res)->second != -1 && resReg == -1) {
+            resReg = registerAllocationMap.find(res)->second;
+        }
         for (Location location : values.find(arg1)->second.locations) {
             argReg = location.reg;
             if (registers.find(location.reg)->second.contents.size() == 1 && resReg == -1 &&
@@ -439,6 +465,11 @@ void Allocator::genAss2(Ident res, Ident arg1, int val2, String op) {
                 break;
             }
         }
+        if (registerAllocationMap.find(arg1)->second != -1) {
+            saveValue(arg1);
+            argReg = registerAllocationMap.find(arg1)->second;
+        }
+
         if (op == "idiv" || op == "mod") {
             if (argReg != -1) {
                 std::cout << "movq %" << registersIdentMap.find(argReg)->second << ", %"
@@ -462,6 +493,18 @@ void Allocator::genAss2(Ident res, Ident arg1, int val2, String op) {
                           << registersIdentMap.find(resReg)->second << "\n";
             }
         }
+        else{
+            if(resReg != argReg){
+                if (argReg != -1) {
+                    std::cout << "movq %" << registersIdentMap.find(argReg)->second << ", %"
+                              << registersIdentMap.find(resReg)->second << "\n";
+                } else {
+                    int varLocation = actualBasicBlock->memoryMap.find(arg1)->second;
+                    std::cout << "movq " << (varLocation + 1) * -8 << "(%rbp)" << ", %"
+                              << registersIdentMap.find(resReg)->second << "\n";
+                }
+            }
+        }
     }
 
     argReg = getFreeRegister(resReg, 3);
@@ -481,11 +524,27 @@ void Allocator::genAss2(Ident res, Ident arg1, int val2, String op) {
     }
     if (op == "mod") {
         resReg = 3;
+        if (registerAllocationMap.find(res)->second != -1) {
+            resReg = registerAllocationMap.find(res)->second;
+            std::cout << "movq %" << registersIdentMap.find(3)->second << ", %"
+                      << registersIdentMap.find(resReg)->second << "\n";
+        }
+    }
+    if (op == "idiv") {
+        if (registerAllocationMap.find(res)->second != -1) {
+            resReg = registerAllocationMap.find(res)->second;
+            std::cout << "movq %" << registersIdentMap.find(0)->second << ", %"
+                      << registersIdentMap.find(resReg)->second << "\n";
+        }
     }
     if (op == "cmp") {
         Ident trueLabel = symbolsTable->getNewSymbol();
         Ident endLabel = symbolsTable->getNewSymbol();
-        resReg = getFreeRegister(-1, -1);
+        if (registerAllocationMap.find(res)->second != -1) {
+            resReg = registerAllocationMap.find(res)->second;
+        } else {
+            resReg = getFreeRegister(-1, -1);
+        }
         std::cout << relOp << " " << trueLabel << "\n";
         std::cout << "movq $0, %" << registersIdentMap.find(resReg)->second << "\n";
         std::cout << "jmp " << endLabel << "\n";
@@ -503,6 +562,7 @@ void Allocator::genAss2(Ident res, Ident arg1, int val2, String op) {
     values.find(res)->second.locations.insert(location1);
     values.find(res)->second.isValue = false;
     values.find(res)->second.type = "int";
+    saveValue(res);
 }
 
 void Allocator::genAss2(Ident res, int val1, Ident arg2, String op) {
@@ -533,10 +593,18 @@ void Allocator::genAss2(Ident res, int val1, Ident arg2, String op) {
                   << "\n";
         std::cout << "cdq\n";
     } else {
-        resReg = getFreeRegister(-1, -1);
+        if (registerAllocationMap.find(res)->second != -1) {
+            resReg = registerAllocationMap.find(res)->second;
+        } else {
+            resReg = getFreeRegister(-1, -1);
+        }
         std::cout << "movq $" << val1 << ", %" << registersIdentMap.find(resReg)->second
                   << "\n";
     }
+    if (registerAllocationMap.find(arg2)->second != -1) {
+        saveValue(arg2);
+    }
+
     if (values.find(arg2)->second.isValue) {
         if (op == "idiv" || op == "mod") {
             argReg = getFreeRegister(0, 3);
@@ -554,6 +622,9 @@ void Allocator::genAss2(Ident res, int val1, Ident arg2, String op) {
         argReg = -1;
         for (Location location : values.find(arg2)->second.locations) {
             argReg = location.reg;
+        }
+        if (registerAllocationMap.find(arg2)->second != -1) {
+            argReg = registerAllocationMap.find(arg2)->second;
         }
         if (argReg != -1) {
             if (op == "idiv" || op == "mod") {
@@ -574,11 +645,27 @@ void Allocator::genAss2(Ident res, int val1, Ident arg2, String op) {
     }
     if (op == "mod") {
         resReg = 3;
+        if (registerAllocationMap.find(res)->second != -1) {
+            resReg = registerAllocationMap.find(res)->second;
+            std::cout << "movq %" << registersIdentMap.find(3)->second << ", %"
+                      << registersIdentMap.find(resReg)->second << "\n";
+        }
+    }
+    if (op == "idiv") {
+        if (registerAllocationMap.find(res)->second != -1) {
+            resReg = registerAllocationMap.find(res)->second;
+            std::cout << "movq %" << registersIdentMap.find(0)->second << ", %"
+                      << registersIdentMap.find(resReg)->second << "\n";
+        }
     }
     if (op == "cmp") {
         Ident trueLabel = symbolsTable->getNewSymbol();
         Ident endLabel = symbolsTable->getNewSymbol();
-        resReg = getFreeRegister(-1, -1);
+        if (registerAllocationMap.find(res)->second != -1) {
+            resReg = registerAllocationMap.find(res)->second;
+        } else {
+            resReg = getFreeRegister(-1, -1);
+        }
         std::cout << relOp << " " << trueLabel << "\n";
         std::cout << "movq $0, %" << registersIdentMap.find(resReg)->second << "\n";
         std::cout << "jmp " << endLabel << "\n";
@@ -596,6 +683,7 @@ void Allocator::genAss2(Ident res, int val1, Ident arg2, String op) {
     values.find(res)->second.locations.insert(location1);
     values.find(res)->second.isValue = false;
     values.find(res)->second.type = "int";
+    saveValue(res);
 }
 
 void Allocator::genAss2(Ident res, Ident arg1, Ident arg2, String op) {
@@ -611,6 +699,21 @@ void Allocator::genAss2(Ident res, Ident arg1, Ident arg2, String op) {
         if (registers.find(location.reg)->second.contents.empty()) {
             registers.find(location.reg)->second.isFree = true;
         }
+    }
+    if (registerAllocationMap.find(arg1)->second != -1) {
+        saveValue(arg1);
+    }
+    if (registerAllocationMap.find(arg2)->second != -1) {
+        saveValue(arg2);
+    }
+    if (op == "idiv" || op == "mod") {
+        if (!registers.find(3)->second.isFree) {
+            spillRegister(3);
+        }
+        if (!registers.find(0)->second.isFree) {
+            spillRegister(0);
+        }
+        resReg = 0;
     }
 
     if (values.find(arg1)->second.isValue) {
@@ -631,22 +734,34 @@ void Allocator::genAss2(Ident res, Ident arg1, Ident arg2, String op) {
                       << "\n";
         }
     } else {
+        if (registerAllocationMap.find(res)->second != -1 && resReg == -1) {
+            resReg = registerAllocationMap.find(res)->second;
+        }
         for (Location location : values.find(arg1)->second.locations) {
             argReg = location.reg;
-            if (registers.find(location.reg)->second.contents.size() == 1 && values.find(arg1)->second.isSaved) {
+            if (registers.find(location.reg)->second.contents.size() == 1 && values.find(arg1)->second.isSaved &&
+                resReg == -1) {
                 resReg = location.reg;
                 break;
             }
         }
-        if (resReg == -1) {
-            if (op == "idiv" || op == "mod") {
-                if (!registers.find(3)->second.isFree) {
-                    spillRegister(3);
-                }
-                if (!registers.find(0)->second.isFree) {
-                    spillRegister(0);
-                }
-                resReg = 0;
+        if (registerAllocationMap.find(arg1)->second != -1) {
+            argReg = registerAllocationMap.find(arg1)->second;
+        }
+
+        if (op == "idiv" || op == "mod") {
+            if (argReg != -1) {
+                std::cout << "movq %" << registersIdentMap.find(argReg)->second << ", %"
+                          << registersIdentMap.find(resReg)->second << "\n";
+            } else {
+                int varLocation = actualBasicBlock->memoryMap.find(arg1)->second;
+                std::cout << "movq " << (varLocation + 1) * -8 << "(%rbp)" << ", %"
+                          << registersIdentMap.find(resReg)->second << "\n";
+            }
+            std::cout << "cdq\n";
+        } else {
+            if (resReg == -1 || resReg == registerAllocationMap.find(arg2)->second) {
+                resReg = getFreeRegister(-1, -1);
                 if (argReg != -1) {
                     std::cout << "movq %" << registersIdentMap.find(argReg)->second << ", %"
                               << registersIdentMap.find(resReg)->second << "\n";
@@ -655,9 +770,8 @@ void Allocator::genAss2(Ident res, Ident arg1, Ident arg2, String op) {
                     std::cout << "movq " << (varLocation + 1) * -8 << "(%rbp)" << ", %"
                               << registersIdentMap.find(resReg)->second << "\n";
                 }
-                std::cout << "cdq\n";
+
             } else {
-                resReg = getFreeRegister(-1, -1);
                 if (argReg != -1) {
                     std::cout << "movq %" << registersIdentMap.find(argReg)->second << ", %"
                               << registersIdentMap.find(resReg)->second << "\n";
@@ -688,6 +802,9 @@ void Allocator::genAss2(Ident res, Ident arg1, Ident arg2, String op) {
         for (Location location : values.find(arg2)->second.locations) {
             argReg = location.reg;
         }
+        if (registerAllocationMap.find(arg2)->second != -1) {
+            argReg = registerAllocationMap.find(arg2)->second;
+        }
         if (op == "idiv" || op == "mod") {
             if (argReg != -1) {
                 std::cout << "idiv" << " %" << registersIdentMap.find(argReg)->second << "\n";
@@ -709,11 +826,27 @@ void Allocator::genAss2(Ident res, Ident arg1, Ident arg2, String op) {
     }
     if (op == "mod") {
         resReg = 3;
+        if (registerAllocationMap.find(res)->second != -1) {
+            resReg = registerAllocationMap.find(res)->second;
+            std::cout << "movq %" << registersIdentMap.find(3)->second << ", %"
+                      << registersIdentMap.find(resReg)->second << "\n";
+        }
+    }
+    if (op == "idiv") {
+        if (registerAllocationMap.find(res)->second != -1) {
+            resReg = registerAllocationMap.find(res)->second;
+            std::cout << "movq %" << registersIdentMap.find(0)->second << ", %"
+                      << registersIdentMap.find(resReg)->second << "\n";
+        }
     }
     if (op == "cmp") {
         Ident trueLabel = symbolsTable->getNewSymbol();
         Ident endLabel = symbolsTable->getNewSymbol();
-        resReg = getFreeRegister(-1, -1);
+        if (registerAllocationMap.find(res)->second != -1) {
+            resReg = registerAllocationMap.find(res)->second;
+        } else {
+            resReg = getFreeRegister(-1, -1);
+        }
         std::cout << relOp << " " << trueLabel << "\n";
         std::cout << "movq $0, %" << registersIdentMap.find(resReg)->second << "\n";
         std::cout << "jmp " << endLabel << "\n";
@@ -721,6 +854,11 @@ void Allocator::genAss2(Ident res, Ident arg1, Ident arg2, String op) {
         std::cout << "movq $1, %" << registersIdentMap.find(resReg)->second << "\n";
         std::cout << endLabel << ":\n";
 
+    }
+    if (registerAllocationMap.find(res)->second != -1 && registerAllocationMap.find(res)->second != resReg) {
+        std::cout << "movq %" << registersIdentMap.find(resReg)->second << ", %"
+                  << registersIdentMap.find(registerAllocationMap.find(res)->second)->second << "\n";
+        resReg = registerAllocationMap.find(res)->second;
     }
     registers.find(resReg)->second.isFree = false;
     registers.find(resReg)->second.contents.insert(res);
@@ -731,15 +869,22 @@ void Allocator::genAss2(Ident res, Ident arg1, Ident arg2, String op) {
     values.find(res)->second.locations.insert(location1);
     values.find(res)->second.isValue = false;
     values.find(res)->second.type = "int";
+    saveValue(res);
 }
 
 void Allocator::genRet(Ident retVal) {
+    if (registerAllocationMap.find(retVal)->second != -1) {
+        saveValue(retVal);
+    }
     if (values.find(retVal)->second.isValue) {
         std::cout << "movl $" << values.find(retVal)->second.value << ", %eax\n";
     } else {
         int retReg = -1;
         for (Location location : values.find(retVal)->second.locations) {
             retReg = location.reg;
+        }
+        if (registerAllocationMap.find(retVal)->second != -1) {
+            retReg = registerAllocationMap.find(retVal)->second;
         }
         if (retReg == -1) {
             int varLocation = actualBasicBlock->memoryMap.find(retVal)->second;
@@ -748,12 +893,26 @@ void Allocator::genRet(Ident retVal) {
             std::cout << "movq %" << registersIdentMap.find(retReg)->second << ", %rax\n";
         }
     }
+    if (actualBasicBlock->funIdent != "main") {
+        std::cout << "popq %rbx\n";
+        std::cout << "popq %r12\n";
+        std::cout << "popq %r13\n";
+        std::cout << "popq %r14\n";
+        std::cout << "popq %r15\n";
+    }
     std::cout << "movq %rbp, %rsp\n";
     std::cout << "popq %rbp\n";
     std::cout << "ret\n";
 }
 
 void Allocator::genRet(int retVal) {
+    if (actualBasicBlock->funIdent != "main") {
+        std::cout << "popq %rbx\n";
+        std::cout << "popq %r12\n";
+        std::cout << "popq %r13\n";
+        std::cout << "popq %r14\n";
+        std::cout << "popq %r15\n";
+    }
     std::cout << "movq %rbp, %rsp\n";
     std::cout << "popq %rbp\n";
     std::cout << "movl $" << retVal << ", %eax\nret\n";
@@ -762,6 +921,9 @@ void Allocator::genRet(int retVal) {
 void Allocator::genIf(Ident cond, Ident label1, Ident label2, std::map<Ident, LivenessInfo> liveVariables,
                       std::map<Ident, int> actualBlockMemMap, std::map<Ident, int> nextBlockMemMapLabel1,
                       std::map<Ident, int> nextBlockMemMapLabel2) {
+    if (registerAllocationMap.find(cond)->second != -1) {
+        saveValue(cond);
+    }
     if (values.find(cond)->second.isValue) {
         if (values.find(cond)->second.value == 0) {
             moveLocalVariables(liveVariables, actualBlockMemMap, nextBlockMemMapLabel2, false);
@@ -778,6 +940,9 @@ void Allocator::genIf(Ident cond, Ident label1, Ident label2, std::map<Ident, Li
                 retReg = location.reg;
                 break;
             }
+        }
+        if (registerAllocationMap.find(cond)->second != -1) {
+            retReg = registerAllocationMap.find(cond)->second;
         }
         Ident l1, l2;
         l1 = symbolsTable->getNewSymbol();
@@ -811,8 +976,9 @@ void Allocator::writeLiveValues() {
     for (auto it = values.begin(); it != values.end(); it++) {
         if (it->second.isValue) {
             if (registerAllocationMap.find(it->first)->second != -1) {
-                std::cout << "movq $" << it->second.value << ", %"
-                          << registersIdentMap.find(registerAllocationMap.find(it->first)->second)->second << "\n";
+                /* std::cout << "movq $" << it->second.value << ", %"
+                           << registersIdentMap.find(registerAllocationMap.find(it->first)->second)->second << "\n";*/
+                saveValue(it->first);
             } else {
                 int reg = getFreeRegister(-1, -1);
                 std::cout << "movq $" << it->second.value << ", %" << registersIdentMap.find(reg)->second << "\n";
@@ -823,8 +989,9 @@ void Allocator::writeLiveValues() {
             it->second.isSaved = true;
         } else if (!it->second.isSaved) {
             if (registerAllocationMap.find(it->first)->second != -1) {
-                std::cout << "movq %" << registersIdentMap.find(it->second.locations.begin()->reg)->second << ", %"
-                          << registersIdentMap.find(registerAllocationMap.find(it->first)->second)->second << "\n";
+                // std::cout << "movq %" << registersIdentMap.find(it->second.locations.begin()->reg)->second << ", %"
+                //          << registersIdentMap.find(registerAllocationMap.find(it->first)->second)->second << "\n";
+                saveValue(it->first);
             } else {
                 int oldReg = -1;
                 for (auto loc : it->second.locations) {
@@ -901,6 +1068,8 @@ void Allocator::moveLocalVariables(std::map<Ident, LivenessInfo> liveVariables, 
                 }
                 movedValues.insert(live.first);
             }
+        } else {
+            saveValue(live.first);
         }
     }
 }
@@ -936,7 +1105,11 @@ void Allocator::genParam(int paramNum, Ident val) {
         if (!registers.find(paramsReg[paramNum + 1])->second.isFree) {
             spillRegister(paramsReg[paramNum + 1]);
         }
-        if (values.find(val)->second.isValue) {
+        if (registerAllocationMap.find(val)->second != -1) {
+            saveValue(val);
+            std::cout << "movq %" << registersIdentMap.find(registerAllocationMap.find(val)->second)->second
+                      << ", %" << registersIdentMap.find(paramsReg[paramNum + 1])->second << "\n";
+        } else if (values.find(val)->second.isValue) {
             std::cout << "movq $" << values.find(val)->second.value << ", %"
                       << registersIdentMap.find(paramsReg[paramNum + 1])->second << "\n";
         } else if (!values.find(val)->second.isValue && !values.find(val)->second.locations.empty()) {
@@ -948,7 +1121,10 @@ void Allocator::genParam(int paramNum, Ident val) {
                       << registersIdentMap.find(paramsReg[paramNum + 1])->second << "\n";
         }
     } else {
-        if (values.find(val)->second.isValue) {
+        if (registerAllocationMap.find(val)->second != -1) {
+            saveValue(val);
+            std::cout << "pushq %" << registersIdentMap.find(registerAllocationMap.find(val)->second)->second << "\n";
+        } else if (values.find(val)->second.isValue) {
             std::cout << "pushq $" << values.find(val)->second.value << "\n";
         } else if (!values.find(val)->second.isValue && !values.find(val)->second.locations.empty()) {
             std::cout << "pushq %" << registersIdentMap.find(values.find(val)->second.locations.begin()->reg)->second
@@ -968,6 +1144,7 @@ void Allocator::genRetrieve(Ident ident) {
     registers.find(0)->second.isFree = false;
     registers.find(0)->second.contents.clear();
     registers.find(0)->second.contents.insert(ident);
+    saveValue(ident);
     spillRegister(0);
 }
 
@@ -1039,6 +1216,7 @@ void Allocator::addString(Ident res, Ident s1, Ident s2) {
     location1.reg = resReg;
     values.find(res)->second.locations.insert(location1);
     values.find(res)->second.type = "string";
+    saveValue(res);
     saveRax();
     clearRegistersInfo();
 }
@@ -1051,18 +1229,37 @@ void Allocator::saveRax() {
 
 void Allocator::clearRegistersInfo() {
     for (auto it = registers.begin(); it != registers.end(); it++) {
-        if(it->first < 9) {
+        if (it->first < 9) {
             it->second.contents.clear();
             it->second.isFree = true;
         }
     }
     for (auto it = values.begin(); it != values.end(); it++) {
         it->second.locations.clear();
-        if(registerAllocationMap.find(it->first)->second != -1){
+        if (registerAllocationMap.find(it->first)->second != -1) {
             Location location;
             location.reg = registerAllocationMap.find(it->first)->second;
             it->second.locations.insert(location);
         }
+    }
+}
+
+void Allocator::saveValue(Ident ident) {
+    int resReg = registerAllocationMap.find(ident)->second;
+    if (!values.find(ident)->second.isSaved && resReg != -1) {
+        if (values.find(ident)->second.isValue) {
+            std::cout << "movq $" << values.find(ident)->second.value << ", %" << registersIdentMap.find(resReg)->second
+                      << "\n";
+            values.find(ident)->second.isValue = false;
+        } else {
+            if (registersIdentMap.find(values.find(ident)->second.locations.begin()->reg)->second !=
+                registersIdentMap.find(resReg)->second) {
+                std::cout << "movq %"
+                          << registersIdentMap.find(values.find(ident)->second.locations.begin()->reg)->second
+                          << ", %" << registersIdentMap.find(resReg)->second << "\n";
+            }
+        }
+        values.find(ident)->second.isSaved = true;
     }
 }
 

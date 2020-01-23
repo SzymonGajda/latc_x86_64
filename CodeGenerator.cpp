@@ -25,10 +25,9 @@ void CodeGenerator::visitQuadAss2(QuadAss2 *q) {
         allocator->genAss2(q->res, q->arg1.value, q->arg2.var, q->op);
     }
     if (!q->arg1.isValue && !q->arg2.isValue) {
-        if(q->arg1.type == "string"){
+        if (q->arg1.type == "string") {
             allocator->addString(q->res, q->arg1.var, q->arg2.var);
-        }
-        else {
+        } else {
             allocator->genAss2(q->res, q->arg1.var, q->arg2.var, q->op);
         }
     }
@@ -36,10 +35,9 @@ void CodeGenerator::visitQuadAss2(QuadAss2 *q) {
 
 void CodeGenerator::visitQuadCopy(QuadCopy *q) {
     if (q->arg.isValue) {
-        if(q->arg.type == "string"){
+        if (q->arg.type == "string") {
             allocator->copyString(q->res, q->arg.stringValue);
-        }
-        else {
+        } else {
             allocator->copy(q->res, q->arg.value);
         }
     } else {
@@ -87,7 +85,7 @@ void CodeGenerator::visitQuadIf(QuadIf *q) {
 }
 
 void CodeGenerator::visitQuadParam(QuadParam *q) {
-   // isBlockEndedWithJump = true;
+    // isBlockEndedWithJump = true;
     if (paramNum == -1 && !actualBasicBlock->successors.empty()) {
         allocator->writeLiveValues();
     }
@@ -100,13 +98,15 @@ void CodeGenerator::visitQuadParam(QuadParam *q) {
 }
 
 void CodeGenerator::visitQuadCall(QuadCall *q) {
-   // isBlockEndedWithJump = true;
+    // isBlockEndedWithJump = true;
     if (paramNum == -1 && !actualBasicBlock->successors.empty()) {
         allocator->writeLiveValues();
     }
     paramNum = -1;
-    std::cout<<"call "<<q->label<<"\n";
-    if(functionHeaders->getHeader(q->label).returnType == "void"){
+    std::cout<<"pushq %r11\n";
+    std::cout << "call " << q->label << "\n";
+    std::cout<<"popq %r11\n";
+    if (functionHeaders->getHeader(q->label).returnType == "void") {
         allocator->clearRegistersInfo();
     }
     isAfterCall = true;
@@ -121,8 +121,11 @@ void CodeGenerator::visitQuadReturn(QuadReturn *q) {
 }
 
 void CodeGenerator::visitQuadReturnNoVal(QuadReturnNoVal *q) {
-    std::cout<<"movq %rbp, %rsp\n";
-    std::cout<<"popq %rbp\n";
+    if(actualBasicBlock->funIdent != "main") {
+        popCallPreservedRegisters();
+    }
+    std::cout << "movq %rbp, %rsp\n";
+    std::cout << "popq %rbp\n";
     std::cout << "ret\n";
 }
 
@@ -136,13 +139,17 @@ void CodeGenerator::visitQuadFunBegin(QuadFunBegin *q) {
     GlobalAllocator globalAllocator;
     registerAllocationMap = globalAllocator.allocateRegisters(q->ident, controlFlowGraph);
     allocator->registerAllocationMap = registerAllocationMap;
-    printRegisterAllocation();
+    // printRegisterAllocation();
     int numOfVariables = getNumOfLocalVariables(q->ident);
     std::cout << q->ident << ":" << "\n";
-    std::cout<<"pushq %rbp\n";
+    std::cout << "pushq %rbp\n";
     std::cout << "movq %rsp, %rbp\n";
-    std::cout<<"subq $"<<numOfVariables * 8<<", %rsp\n";
-    allocator->initFunArgs(functionHeaders->getHeader(q->ident).newArgSymbols, *actualBasicBlock->liveness.rbegin(), actualBasicBlock->memoryMap);
+    std::cout << "subq $" << numOfVariables * 8 << ", %rsp\n";
+    if(q->ident != "main") {
+        pushCallPreservedRegisters();
+    }
+    allocator->initFunArgs(functionHeaders->getHeader(q->ident).newArgSymbols, *actualBasicBlock->liveness.rbegin(),
+                           actualBasicBlock->memoryMap);
 }
 
 void CodeGenerator::generateCode() {
@@ -154,10 +161,10 @@ void CodeGenerator::generateCode() {
                  ".extern readString\n"
                  ".extern concat\n"
                  ".text\n";
-    for(auto stringPair: stringValues){
-        std::cout<<stringPair.first<<":\n.ascii \""<<stringPair.second<<"\\0\"\n";
+    for (auto stringPair: stringValues) {
+        std::cout << stringPair.first << ":\n.ascii \"" << stringPair.second << "\\0\"\n";
     }
-    std::cout<<".globl main\n";
+    std::cout << ".globl main\n";
     for (BasicBlock *basicBlock : controlFlowGraph->basicBlocks) {
         int ind = -1;
         actualBasicBlock = basicBlock;
@@ -176,7 +183,8 @@ void CodeGenerator::generateCode() {
             if (!actualBasicBlock->successors.empty()) {
                 allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
                                               (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
-                                                      *actualBasicBlock->successors.begin())->second]->memoryMap, isAfterCall);
+                                                      *actualBasicBlock->successors.begin())->second]->memoryMap,
+                                              isAfterCall);
             }
         }
         isAfterCall = false;
@@ -185,8 +193,8 @@ void CodeGenerator::generateCode() {
 
 int CodeGenerator::getNumOfLocalVariables(Ident funIdent) {
     int max = 0;
-    for(auto basicBlock : controlFlowGraph->basicBlocks){
-        if(basicBlock->funIdent == funIdent && basicBlock->memoryMap.size() > max){
+    for (auto basicBlock : controlFlowGraph->basicBlocks) {
+        if (basicBlock->funIdent == funIdent && basicBlock->memoryMap.size() > max) {
             max = basicBlock->memoryMap.size();
         }
     }
@@ -194,10 +202,26 @@ int CodeGenerator::getNumOfLocalVariables(Ident funIdent) {
 }
 
 void CodeGenerator::printRegisterAllocation() {
-    std::cout<<"\n\n";
-    for(auto value : registerAllocationMap){
-        std::cout<<value.first<<" "<<value.second<<"\n";
+    std::cout << "\n\n";
+    for (auto value : registerAllocationMap) {
+        std::cout << value.first << " " << value.second << "\n";
     }
-    std::cout<<"\n\n";
+    std::cout << "\n\n";
 
+}
+
+void CodeGenerator::pushCallPreservedRegisters() {
+    std::cout << "pushq %rbx\n";
+    std::cout << "pushq %r12\n";
+    std::cout << "pushq %r13\n";
+    std::cout << "pushq %r14\n";
+    std::cout << "pushq %r15\n";
+}
+
+void CodeGenerator::popCallPreservedRegisters() {
+    std::cout << "popq %rbx\n";
+    std::cout << "popq %r12\n";
+    std::cout << "popq %r13\n";
+    std::cout << "popq %r14\n";
+    std::cout << "popq %r15\n";
 }

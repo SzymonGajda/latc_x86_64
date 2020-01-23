@@ -13,7 +13,7 @@ void BasicBlockConverter::visitProg(Prog *q) {
     setEdges();
     controlFlowGraph->calculateDataFlow();
     controlFlowGraph->generateMemoryMap(symbolsTable);
-    controlFlowGraph->printCFG();
+   // controlFlowGraph->printCFG();
 
 }
 

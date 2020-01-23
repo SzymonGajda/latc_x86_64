@@ -59,6 +59,8 @@ public:
 
     void writeLiveValues();
 
+    void saveValue(Ident ident);
+
     void clearRegistersInfo();
 
     void copy(Ident ident1, Ident ident2);

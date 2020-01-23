@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
         symbolsTable = new SymbolsTable;
         threeAddressCodeConverter->symbolsTable = symbolsTable;
         parse_tree->accept(threeAddressCodeConverter);
-        // TACPrinter tacPrinter =  TACPrinter();
+         TACPrinter tacPrinter =  TACPrinter();
         // parse_tree->accept(&tacPrinter);
 
         auto *basicBlockConverter = new BasicBlockConverter;
