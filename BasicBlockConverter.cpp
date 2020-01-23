@@ -11,10 +11,9 @@
 void BasicBlockConverter::visitProg(Prog *q) {
     q->listtopdef_->accept(this);
     setEdges();
-    //controlFlowGraph->deleteCFG();
     controlFlowGraph->calculateDataFlow();
     controlFlowGraph->generateMemoryMap(symbolsTable);
-  //  controlFlowGraph->printCFG();
+    controlFlowGraph->printCFG();
 
 }
 

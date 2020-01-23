@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "CodeGenerator.h"
+#include "GlobalAllocator.h"
 
 void CodeGenerator::visitQuadAss1(QuadAss1 *q) {
     if (q->arg.isValue) {
@@ -132,6 +133,10 @@ void CodeGenerator::visitQuadRetrieve(QuadRetrieve *q) {
 }
 
 void CodeGenerator::visitQuadFunBegin(QuadFunBegin *q) {
+    GlobalAllocator globalAllocator;
+    registerAllocationMap = globalAllocator.allocateRegisters(q->ident, controlFlowGraph);
+    allocator->registerAllocationMap = registerAllocationMap;
+    printRegisterAllocation();
     int numOfVariables = getNumOfLocalVariables(q->ident);
     std::cout << q->ident << ":" << "\n";
     std::cout<<"pushq %rbp\n";
@@ -186,4 +191,13 @@ int CodeGenerator::getNumOfLocalVariables(Ident funIdent) {
         }
     }
     return max;
+}
+
+void CodeGenerator::printRegisterAllocation() {
+    std::cout<<"\n\n";
+    for(auto value : registerAllocationMap){
+        std::cout<<value.first<<" "<<value.second<<"\n";
+    }
+    std::cout<<"\n\n";
+
 }

@@ -20,10 +20,13 @@ public:
     Ident actualFun;
     FunctionHeaders *functionHeaders;
     std::vector<std::pair<String, String> > stringValues;
+    std::map<Ident, int> registerAllocationMap;
     int paramNum = -1;
     bool isAfterCall = false;
 
     int getNumOfLocalVariables(Ident funIdent);
+
+    void printRegisterAllocation();
 
     void generateCode();
 

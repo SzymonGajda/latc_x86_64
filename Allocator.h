@@ -44,10 +44,11 @@ public:
 
     std::map<int, Ident> registersIdentMap;
     std::vector<String> code;
-    int numOfRegisters = 14;
+    int numOfRegisters = 9;
     std::map<int, RegisterDescription> registers;
     std::map<Ident, ValueDescription> values;
     std::map<Ident, LivenessInfo> livenessMap;
+    std::map<Ident, int> registerAllocationMap;
     SymbolsTable *symbolsTable;
     BasicBlock *actualBasicBlock;
 
