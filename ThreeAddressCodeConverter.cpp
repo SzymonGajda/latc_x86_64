@@ -205,20 +205,26 @@ void ThreeAddressCodeConverter::visitEString(EString *p) {
 
 void ThreeAddressCodeConverter::visitNeg(Neg *p) {
     p->expr_->accept(this);
-    Ident res = symbolsTable->getNewSymbol();
-    QuadAss1 *quadAss1 = new QuadAss1(res, arg, "neg");
-    quadBlk->quadlist->push_back(quadAss1);
-    arg = QuadArg(false, 0, res);
+    if (arg.isValue) {
+        arg = QuadArg(true, -arg.value, "");
+    } else {
+        Ident res = symbolsTable->getNewSymbol();
+        QuadAss1 *quadAss1 = new QuadAss1(res, arg, "neg");
+        quadBlk->quadlist->push_back(quadAss1);
+        arg = QuadArg(false, 0, res);
+    }
 }
 
 void ThreeAddressCodeConverter::visitNot(Not *p) {
     p->expr_->accept(this);
-    Ident res = symbolsTable->getNewSymbol();
-    //QuadAss1 *quadAss1 = new QuadAss1(res, arg, "not");
-    //quadBlk->quadlist->push_back(quadAss1);
-    QuadAss2 *quadAss2 = new QuadAss2(res, arg, QuadArg(true, 1, ""), "xor");
-    quadBlk->quadlist->push_back(quadAss2);
-    arg = QuadArg(false, 0, res);
+    if (arg.isValue) {
+        arg = QuadArg(true, arg.value ^ 1, "");
+    } else {
+        Ident res = symbolsTable->getNewSymbol();
+        QuadAss2 *quadAss2 = new QuadAss2(res, arg, QuadArg(true, 1, ""), "xor");
+        quadBlk->quadlist->push_back(quadAss2);
+        arg = QuadArg(false, 0, res);
+    }
 }
 
 void ThreeAddressCodeConverter::visitEMul(EMul *p) {
@@ -229,9 +235,21 @@ void ThreeAddressCodeConverter::visitEMul(EMul *p) {
     QuadArg quadArg1 = arg;
     p->expr_2->accept(this);
     QuadArg quadArg2 = arg;
-    QuadAss2 *quadAss2 = new QuadAss2(ident, quadArg1, quadArg2, mulOp);
-    quadBlk->quadlist->push_back(quadAss2);
-    arg = QuadArg(false, 0, ident);
+    if (quadArg1.isValue && quadArg2.isValue) {
+        if (mulOp == "imul") {
+            arg = QuadArg(true, quadArg1.value * quadArg2.value, "");
+        }
+        if (mulOp == "idiv") {
+            arg = QuadArg(true, quadArg1.value / quadArg2.value, "");
+        }
+        if (mulOp == "mod") {
+            arg = QuadArg(true, quadArg1.value % quadArg2.value, "");
+        }
+    } else {
+        QuadAss2 *quadAss2 = new QuadAss2(ident, quadArg1, quadArg2, mulOp);
+        quadBlk->quadlist->push_back(quadAss2);
+        arg = QuadArg(false, 0, ident);
+    }
 }
 
 void ThreeAddressCodeConverter::visitEAdd(EAdd *p) {
@@ -242,12 +260,21 @@ void ThreeAddressCodeConverter::visitEAdd(EAdd *p) {
     QuadArg quadArg1 = arg;
     p->expr_2->accept(this);
     QuadArg quadArg2 = arg;
-    QuadAss2 *quadAss2 = new QuadAss2(ident, quadArg1, quadArg2, addOp);
-    quadBlk->quadlist->push_back(quadAss2);
-    if (quadArg1.type == "string") {
-        arg = QuadArg(false, "", ident);
+    if (quadArg1.isValue && quadArg2.isValue) {
+        if (addOp == "add") {
+            arg = QuadArg(true, quadArg1.value + quadArg2.value, "");
+        }
+        if (addOp == "sub") {
+            arg = QuadArg(true, quadArg1.value - quadArg2.value, "");
+        }
     } else {
-        arg = QuadArg(false, 0, ident);
+        QuadAss2 *quadAss2 = new QuadAss2(ident, quadArg1, quadArg2, addOp);
+        quadBlk->quadlist->push_back(quadAss2);
+        if (quadArg1.type == "string") {
+            arg = QuadArg(false, "", ident);
+        } else {
+            arg = QuadArg(false, 0, ident);
+        }
     }
 }
 
@@ -259,9 +286,54 @@ void ThreeAddressCodeConverter::visitERel(ERel *p) {
     QuadArg quadArg1 = arg;
     p->expr_2->accept(this);
     QuadArg quadArg2 = arg;
-    QuadAss2 *quadAss2 = new QuadAss2(ident, quadArg1, quadArg2, relOp);
-    quadBlk->quadlist->push_back(quadAss2);
-    arg = QuadArg(false, 0, ident);
+    if (quadArg1.isValue && quadArg2.isValue) {
+        if (relOp == "jl") {
+            if (quadArg1.value < quadArg2.value) {
+                arg = QuadArg(true, 1, "");
+            } else {
+                arg = QuadArg(true, 0, "");
+            }
+        }
+        if (relOp == "jle") {
+            if (quadArg1.value <= quadArg2.value) {
+                arg = QuadArg(true, 1, "");
+            } else {
+                arg = QuadArg(true, 0, "");
+            }
+        }
+        if (relOp == "jg") {
+            if (quadArg1.value > quadArg2.value) {
+                arg = QuadArg(true, 1, "");
+            } else {
+                arg = QuadArg(true, 0, "");
+            }
+        }
+        if (relOp == "jge") {
+            if (quadArg1.value >= quadArg2.value) {
+                arg = QuadArg(true, 1, "");
+            } else {
+                arg = QuadArg(true, 0, "");
+            }
+        }
+        if (relOp == "je") {
+            if (quadArg1.value == quadArg2.value) {
+                arg = QuadArg(true, 1, "");
+            } else {
+                arg = QuadArg(true, 0, "");
+            }
+        }
+        if (relOp == "jne") {
+            if (quadArg1.value != quadArg2.value) {
+                arg = QuadArg(true, 1, "");
+            } else {
+                arg = QuadArg(true, 0, "");
+            }
+        }
+    } else {
+        QuadAss2 *quadAss2 = new QuadAss2(ident, quadArg1, quadArg2, relOp);
+        quadBlk->quadlist->push_back(quadAss2);
+        arg = QuadArg(false, 0, ident);
+    }
 }
 
 void ThreeAddressCodeConverter::visitEAnd(EAnd *p) {

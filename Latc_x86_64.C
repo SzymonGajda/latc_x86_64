@@ -34,7 +34,8 @@ int main(int argc, char **argv) {
         topDefAnalyser.functionHeaders = functionHeaders;
         parse_tree->accept(&topDefAnalyser);
         if (topDefAnalyser.error.isError) {
-            std::cout << topDefAnalyser.error.getErrorMessage();
+            std::cerr<<"ERROR\n";
+            std::cerr << topDefAnalyser.error.getErrorMessage();
             return 0;
         }
         SemanticAnalyser semanticAnalyser;
@@ -56,7 +57,7 @@ int main(int argc, char **argv) {
         symbolsTable = new SymbolsTable;
         threeAddressCodeConverter->symbolsTable = symbolsTable;
         parse_tree->accept(threeAddressCodeConverter);
-         TACPrinter tacPrinter =  TACPrinter();
+        TACPrinter tacPrinter = TACPrinter();
         // parse_tree->accept(&tacPrinter);
 
         auto *basicBlockConverter = new BasicBlockConverter;
@@ -83,7 +84,6 @@ int main(int argc, char **argv) {
         delete functionHeaders;
         delete basicBlockConverter->controlFlowGraph;
         delete basicBlockConverter->tacPrinter;
-        //delete basicBlockConverter->basicBlock;
         delete basicBlockConverter;
         return 0;
     }

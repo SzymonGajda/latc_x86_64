@@ -24,6 +24,8 @@ public:
     int paramNum = -1;
     bool isAfterCall = false;
 
+    String resultCode = "";
+
     int getNumOfLocalVariables(Ident funIdent);
 
     void printRegisterAllocation();
