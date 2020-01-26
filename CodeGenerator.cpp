@@ -103,9 +103,9 @@ void CodeGenerator::visitQuadCall(QuadCall *q) {
         allocator->writeLiveValues();
     }
     paramNum = -1;
-    std::cout<<"pushq %r11\n";
+    std::cout << "pushq %r11\n";
     std::cout << "call " << q->label << "\n";
-    std::cout<<"popq %r11\n";
+    std::cout << "popq %r11\n";
     if (functionHeaders->getHeader(q->label).returnType == "void") {
         allocator->clearRegistersInfo();
     }
@@ -121,7 +121,7 @@ void CodeGenerator::visitQuadReturn(QuadReturn *q) {
 }
 
 void CodeGenerator::visitQuadReturnNoVal(QuadReturnNoVal *q) {
-    if(actualBasicBlock->funIdent != "main") {
+    if (actualBasicBlock->funIdent != "main") {
         popCallPreservedRegisters();
     }
     std::cout << "movq %rbp, %rsp\n";
@@ -145,7 +145,7 @@ void CodeGenerator::visitQuadFunBegin(QuadFunBegin *q) {
     std::cout << "pushq %rbp\n";
     std::cout << "movq %rsp, %rbp\n";
     std::cout << "subq $" << numOfVariables * 8 << ", %rsp\n";
-    if(q->ident != "main") {
+    if (q->ident != "main") {
         pushCallPreservedRegisters();
     }
     allocator->initFunArgs(functionHeaders->getHeader(q->ident).newArgSymbols, *actualBasicBlock->liveness.rbegin(),
@@ -162,7 +162,9 @@ void CodeGenerator::generateCode() {
                  ".extern concat\n"
                  ".text\n";
     for (auto stringPair: stringValues) {
-        std::cout << stringPair.first << ":\n.ascii \"" << stringPair.second << "\\0\"\n";
+        std::cout << stringPair.first << ":\n.ascii \"";
+        writeString(std::cout, stringPair.second );
+        std::cout<< "\\0\"\n";
     }
     std::cout << ".globl main\n";
     for (BasicBlock *basicBlock : controlFlowGraph->basicBlocks) {
@@ -219,9 +221,65 @@ void CodeGenerator::pushCallPreservedRegisters() {
 }
 
 void CodeGenerator::popCallPreservedRegisters() {
-    std::cout << "popq %rbx\n";
-    std::cout << "popq %r12\n";
-    std::cout << "popq %r13\n";
-    std::cout << "popq %r14\n";
     std::cout << "popq %r15\n";
+    std::cout << "popq %r14\n";
+    std::cout << "popq %r13\n";
+    std::cout << "popq %r12\n";
+    std::cout << "popq %rbx\n";
+
+}
+
+std::ostream &CodeGenerator::writeString(std::ostream &out, std::string const &s) {
+    for (auto ch : s) {
+        switch (ch) {
+            case '\'':
+                out << "\\'";
+                break;
+
+            case '\"':
+                out << "\\\"";
+                break;
+
+            case '\?':
+                out << "\\?";
+                break;
+
+            case '\\':
+                out << "\\\\";
+                break;
+
+            case '\a':
+                out << "\\a";
+                break;
+
+            case '\b':
+                out << "\\b";
+                break;
+
+            case '\f':
+                out << "\\f";
+                break;
+
+            case '\n':
+                out << "\\n";
+                break;
+
+            case '\r':
+                out << "\\r";
+                break;
+
+            case '\t':
+                out << "\\t";
+                break;
+
+            case '\v':
+                out << "\\v";
+                break;
+
+            default:
+                out << ch;
+        }
+    }
+
+    return out;
 }

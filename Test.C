@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
         delete functionHeaders;
         delete basicBlockConverter->controlFlowGraph;
         delete basicBlockConverter->tacPrinter;
-        delete basicBlockConverter->basicBlock;
+        //delete basicBlockConverter->basicBlock;
         delete basicBlockConverter;
         return 0;
     }
