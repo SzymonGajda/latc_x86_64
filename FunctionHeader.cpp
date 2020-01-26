@@ -3,7 +3,6 @@
 //
 
 #include <iostream>
-#include <map>
 #include <set>
 #include "FunctionHeader.h"
 #include "Error.h"
@@ -136,16 +135,16 @@ FunctionHeaders::FunctionHeaders() {
 }
 
 FunctionHeader FunctionHeaders::getHeader(String ident, int lineNumber, Error &error) {
-       for (FunctionHeader functionHeader : headers) {
-           if (functionHeader.ident == ident) {
-               return functionHeader;
-           }
-       }
+    for (FunctionHeader functionHeader : headers) {
+        if (functionHeader.ident == ident) {
+            return functionHeader;
+        }
+    }
 
     error.setIsError(true);
     error.setErrorMessage("Error at line " + std::to_string(lineNumber) +
                           ": function " +
-                           ident + " is not declared\n");
+                          ident + " is not declared\n");
     return headers[0];
 }
 
@@ -159,8 +158,8 @@ FunctionHeader FunctionHeaders::getHeader(String ident) {
 }
 
 void FunctionHeaders::removeHeader(String ident) {
-    for(auto it = headers.begin(); it!= headers.end();it++){
-        if(it->ident == ident){
+    for (auto it = headers.begin(); it != headers.end(); it++) {
+        if (it->ident == ident) {
             headers.erase(it);
             return;
         }

@@ -6,10 +6,6 @@
 
 Error::Error(bool isError, const String &errorMessage) : isError(isError), errorMessage(errorMessage) {}
 
-bool Error::isError1() const {
-    return isError;
-}
-
 void Error::setIsError(bool isError) {
     Error::isError = isError;
 }

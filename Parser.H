@@ -6,51 +6,66 @@
 
 
 class Program;
+
 class TopDef;
+
 class ListTopDef;
+
 class Arg;
+
 class ListArg;
+
 class Block;
+
 class ListStmt;
+
 class Stmt;
+
 class Item;
+
 class ListItem;
+
 class Type;
+
 class ListType;
+
 class Expr;
+
 class ListExpr;
+
 class AddOp;
+
 class MulOp;
+
 class RelOp;
 
-typedef union
-{
-  int int_;
-  char char_;
-  double double_;
-  char* string_;
-  Program* program_;
-  TopDef* topdef_;
-  ListTopDef* listtopdef_;
-  Arg* arg_;
-  ListArg* listarg_;
-  Block* block_;
-  ListStmt* liststmt_;
-  Stmt* stmt_;
-  Item* item_;
-  ListItem* listitem_;
-  Type* type_;
-  ListType* listtype_;
-  Expr* expr_;
-  ListExpr* listexpr_;
-  AddOp* addop_;
-  MulOp* mulop_;
-  RelOp* relop_;
+typedef union {
+    int int_;
+    char char_;
+    double double_;
+    char *string_;
+    Program *program_;
+    TopDef *topdef_;
+    ListTopDef *listtopdef_;
+    Arg *arg_;
+    ListArg *listarg_;
+    Block *block_;
+    ListStmt *liststmt_;
+    Stmt *stmt_;
+    Item *item_;
+    ListItem *listitem_;
+    Type *type_;
+    ListType *listtype_;
+    Expr *expr_;
+    ListExpr *listexpr_;
+    AddOp *addop_;
+    MulOp *mulop_;
+    RelOp *relop_;
 } YYSTYPE;
 
-Program* pProgram(FILE *inp);
-Program* pProgram(const char *str);
+Program *pProgram(FILE *inp);
 
+Program *pProgram(const char *str);
 
 
 #define _ERROR_ 258

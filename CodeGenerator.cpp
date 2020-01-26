@@ -9,26 +9,40 @@
 void CodeGenerator::visitQuadAss1(QuadAss1 *q) {
     if (q->arg.isValue) {
         allocator->genAss1(q->res, q->arg.value, q->op);
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     } else {
         allocator->genAss1(q->res, q->arg.var, q->op);
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     }
 }
 
 void CodeGenerator::visitQuadAss2(QuadAss2 *q) {
     if (q->arg1.isValue && q->arg2.isValue) {
         allocator->genAss2(q->res, q->arg1.value, q->arg2.value, q->op);
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     }
     if (!q->arg1.isValue && q->arg2.isValue) {
         allocator->genAss2(q->res, q->arg1.var, q->arg2.value, q->op);
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     }
     if (q->arg1.isValue && !q->arg2.isValue) {
         allocator->genAss2(q->res, q->arg1.value, q->arg2.var, q->op);
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     }
     if (!q->arg1.isValue && !q->arg2.isValue) {
         if (q->arg1.type == "string") {
             allocator->addString(q->res, q->arg1.var, q->arg2.var);
+            resultCode += allocator->resultCode;
+            allocator->resultCode = "";
         } else {
             allocator->genAss2(q->res, q->arg1.var, q->arg2.var, q->op);
+            resultCode += allocator->resultCode;
+            allocator->resultCode = "";
         }
     }
 }
@@ -37,42 +51,51 @@ void CodeGenerator::visitQuadCopy(QuadCopy *q) {
     if (q->arg.isValue) {
         if (q->arg.type == "string") {
             allocator->copyString(q->res, q->arg.stringValue);
+            resultCode += allocator->resultCode;
+            allocator->resultCode = "";
         } else {
             allocator->copy(q->res, q->arg.value);
+            resultCode += allocator->resultCode;
+            allocator->resultCode = "";
         }
     } else {
         allocator->copy(q->res, q->arg.var);
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     }
 }
 
 void CodeGenerator::visitQuadJmp(QuadJmp *q) {
     isBlockEndedWithJump = true;
-    // allocator->writeLiveValues();
     allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
                                   (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
                                           q->label)->second]->memoryMap, false);
-    std::cout << q->jmpOp << " " << q->label << "\n";
+    resultCode += allocator->resultCode;
+    allocator->resultCode = "";
+    resultCode += q->jmpOp + " " + q->label + "\n";
 }
 
 void CodeGenerator::visitQuadLabel(QuadLabel *q) {
-    std::cout << q->label << ":\n";
+    resultCode += q->label + ":\n";
 }
 
 void CodeGenerator::visitQuadIf(QuadIf *q) {
     isBlockEndedWithJump = true;
     if (q->cond.isValue) {
         if (q->cond.value == 0) {
-            //allocator->writeLiveValues();
             allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
                                           (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
                                                   q->label2)->second]->memoryMap, false);
-            std::cout << "jmp " << q->label2 << "\n";
+            resultCode += allocator->resultCode;
+            allocator->resultCode = "";
+            resultCode += "jmp " + q->label2 + "\n";
         } else {
-            //allocator->writeLiveValues();
             allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
                                           (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
                                                   q->label1)->second]->memoryMap, false);
-            std::cout << "jmp " << q->label1 << "\n";
+            resultCode += allocator->resultCode;
+            allocator->resultCode = "";
+            resultCode += "jmp " + q->label1 + "\n";
         }
     } else {
         allocator->genIf(q->cond.var, q->label1, q->label2, *actualBasicBlock->liveness.begin(),
@@ -81,33 +104,44 @@ void CodeGenerator::visitQuadIf(QuadIf *q) {
                                  q->label1)->second]->memoryMap,
                          (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
                                  q->label2)->second]->memoryMap);
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     }
 }
 
 void CodeGenerator::visitQuadParam(QuadParam *q) {
-    // isBlockEndedWithJump = true;
     if (paramNum == -1 && !actualBasicBlock->successors.empty()) {
         allocator->writeLiveValues();
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     }
     if (q->arg.isValue) {
         allocator->genParam(paramNum, q->arg.value);
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     } else {
         allocator->genParam(paramNum, q->arg.var);
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     }
     paramNum++;
 }
 
 void CodeGenerator::visitQuadCall(QuadCall *q) {
-    // isBlockEndedWithJump = true;
     if (paramNum == -1 && !actualBasicBlock->successors.empty()) {
         allocator->writeLiveValues();
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     }
     paramNum = -1;
-    std::cout << "pushq %r11\n";
-    std::cout << "call " << q->label << "\n";
-    std::cout << "popq %r11\n";
+    resultCode += "pushq %r11\n";
+    resultCode += "call " + q->label + "\n";
+    resultCode += "popq %r11\n";
+    allocator->popFunArgs(q->argsNum);
     if (functionHeaders->getHeader(q->label).returnType == "void") {
         allocator->clearRegistersInfo();
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     }
     isAfterCall = true;
 }
@@ -115,8 +149,12 @@ void CodeGenerator::visitQuadCall(QuadCall *q) {
 void CodeGenerator::visitQuadReturn(QuadReturn *q) {
     if (q->ret.isValue) {
         allocator->genRet(q->ret.value);
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     } else {
         allocator->genRet(q->ret.var);
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
     }
 }
 
@@ -124,54 +162,62 @@ void CodeGenerator::visitQuadReturnNoVal(QuadReturnNoVal *q) {
     if (actualBasicBlock->funIdent != "main") {
         popCallPreservedRegisters();
     }
-    std::cout << "movq %rbp, %rsp\n";
-    std::cout << "popq %rbp\n";
-    std::cout << "ret\n";
+    resultCode += "movq %rbp, %rsp\n";
+    resultCode += "popq %rbp\n";
+    resultCode += "ret\n";
 }
 
 void CodeGenerator::visitQuadRetrieve(QuadRetrieve *q) {
     allocator->genRetrieve(q->res);
     allocator->saveRax();
     allocator->clearRegistersInfo();
+    resultCode += allocator->resultCode;
+    allocator->resultCode = "";
 }
 
 void CodeGenerator::visitQuadFunBegin(QuadFunBegin *q) {
     GlobalAllocator globalAllocator;
     registerAllocationMap = globalAllocator.allocateRegisters(q->ident, controlFlowGraph);
     allocator->registerAllocationMap = registerAllocationMap;
-    // printRegisterAllocation();
     int numOfVariables = getNumOfLocalVariables(q->ident);
-    std::cout << q->ident << ":" << "\n";
-    std::cout << "pushq %rbp\n";
-    std::cout << "movq %rsp, %rbp\n";
-    std::cout << "subq $" << numOfVariables * 8 << ", %rsp\n";
+    resultCode += q->ident + ":" + "\n";
+    resultCode += "pushq %rbp\n";
+    resultCode += "movq %rsp, %rbp\n";
+    resultCode += "subq $" + std::to_string(numOfVariables * 8) + ", %rsp\n";
     if (q->ident != "main") {
         pushCallPreservedRegisters();
     }
     allocator->initFunArgs(functionHeaders->getHeader(q->ident).newArgSymbols, *actualBasicBlock->liveness.rbegin(),
                            actualBasicBlock->memoryMap);
+    resultCode += allocator->resultCode;
+    allocator->resultCode = "";
 }
 
 void CodeGenerator::generateCode() {
     allocator->initRegisters();
     allocator->initRegistersIdentMap();
-    std::cout << ".extern printInt\n"
-                 ".extern printString\n"
-                 ".extern readInt\n"
-                 ".extern readString\n"
-                 ".extern concat\n"
-                 ".text\n";
+    resultCode += allocator->resultCode;
+    allocator->resultCode = "";
+    resultCode += ".extern printInt\n"
+                  ".extern printString\n"
+                  ".extern readInt\n"
+                  ".extern readString\n"
+                  ".extern error\n"
+                  ".extern _concat\n"
+                  ".text\n";
     for (auto stringPair: stringValues) {
-        std::cout << stringPair.first << ":\n.ascii \"";
-        writeString(std::cout, stringPair.second );
-        std::cout<< "\\0\"\n";
+        resultCode += stringPair.first + ":\n.ascii \"";
+        resultCode += writeString(stringPair.second);
+        resultCode += "\\0\"\n";
     }
-    std::cout << ".globl main\n";
+    resultCode += ".globl main\n";
     for (BasicBlock *basicBlock : controlFlowGraph->basicBlocks) {
         int ind = -1;
         actualBasicBlock = basicBlock;
         allocator->actualBasicBlock = basicBlock;
         allocator->initValues();
+        resultCode += allocator->resultCode;
+        allocator->resultCode = "";
         isBlockEndedWithJump = false;
         for (auto it = basicBlock->liveness.rbegin(); it != basicBlock->liveness.rend(); it++) {
             if (ind >= 0) {
@@ -181,12 +227,13 @@ void CodeGenerator::generateCode() {
             ind++;
         }
         if (!isBlockEndedWithJump && !basicBlock->successors.empty()) {
-            //  allocator->writeLiveValues();
             if (!actualBasicBlock->successors.empty()) {
                 allocator->moveLocalVariables(*actualBasicBlock->liveness.begin(), actualBasicBlock->memoryMap,
                                               (controlFlowGraph->basicBlocks)[controlFlowGraph->blockLabelsMap.find(
                                                       *actualBasicBlock->successors.begin())->second]->memoryMap,
                                               isAfterCall);
+                resultCode += allocator->resultCode;
+                allocator->resultCode = "";
             }
         }
         isAfterCall = false;
@@ -204,80 +251,81 @@ int CodeGenerator::getNumOfLocalVariables(Ident funIdent) {
 }
 
 void CodeGenerator::printRegisterAllocation() {
-    std::cout << "\n\n";
+    resultCode += "\n\n";
     for (auto value : registerAllocationMap) {
         std::cout << value.first << " " << value.second << "\n";
     }
-    std::cout << "\n\n";
+    resultCode += "\n\n";
 
 }
 
 void CodeGenerator::pushCallPreservedRegisters() {
-    std::cout << "pushq %rbx\n";
-    std::cout << "pushq %r12\n";
-    std::cout << "pushq %r13\n";
-    std::cout << "pushq %r14\n";
-    std::cout << "pushq %r15\n";
+    resultCode += "pushq %rbx\n";
+    resultCode += "pushq %r12\n";
+    resultCode += "pushq %r13\n";
+    resultCode += "pushq %r14\n";
+    resultCode += "pushq %r15\n";
 }
 
 void CodeGenerator::popCallPreservedRegisters() {
-    std::cout << "popq %r15\n";
-    std::cout << "popq %r14\n";
-    std::cout << "popq %r13\n";
-    std::cout << "popq %r12\n";
-    std::cout << "popq %rbx\n";
+    resultCode += "popq %r15\n";
+    resultCode += "popq %r14\n";
+    resultCode += "popq %r13\n";
+    resultCode += "popq %r12\n";
+    resultCode += "popq %rbx\n";
 
 }
 
-std::ostream &CodeGenerator::writeString(std::ostream &out, std::string const &s) {
+std::string CodeGenerator::writeString(std::string const &s) {
+    String out = "";
     for (auto ch : s) {
         switch (ch) {
             case '\'':
-                out << "\\'";
+                out += "\\'";
                 break;
 
             case '\"':
-                out << "\\\"";
+                out += "\\\"";
                 break;
 
             case '\?':
-                out << "\\?";
+                out += "\\?";
                 break;
 
             case '\\':
-                out << "\\\\";
+                out += "\\\\";
                 break;
 
             case '\a':
-                out << "\\a";
+                out += "\\a";
                 break;
 
             case '\b':
-                out << "\\b";
+                out += "\\b";
                 break;
 
             case '\f':
-                out << "\\f";
+                out += "\\f";
                 break;
 
             case '\n':
-                out << "\\n";
+                out += "\\n";
                 break;
 
             case '\r':
-                out << "\\r";
+                out += "\\r";
                 break;
 
             case '\t':
-                out << "\\t";
+                out += "\\t";
                 break;
 
             case '\v':
-                out << "\\v";
+                out += "\\v";
                 break;
 
             default:
-                out << ch;
+                out += ch;
         }
     }
 

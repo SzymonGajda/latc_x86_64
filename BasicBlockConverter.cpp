@@ -13,25 +13,23 @@ void BasicBlockConverter::visitProg(Prog *q) {
     setEdges();
     controlFlowGraph->calculateDataFlow();
     controlFlowGraph->generateMemoryMap(symbolsTable);
-   // controlFlowGraph->printCFG();
-
 }
 
 void BasicBlockConverter::visitQuadBlk(QuadBlk *q) {
-    if(!basicBlock->quadlist.empty()){
+    if (!basicBlock->quadlist.empty()) {
         basicBlock = new BasicBlock;
     }
     for (auto it = q->quadlist->begin(); it != q->quadlist->end(); it++) {
         (*it)->accept(this);
     }
-    if(!basicBlock->quadlist.empty()){
+    if (!basicBlock->quadlist.empty()) {
         controlFlowGraph->basicBlocks.push_back(basicBlock);
     }
     delete q;
 }
 
 void BasicBlockConverter::visitQuadFunBegin(QuadFunBegin *q) {
-    actualFun= q->ident;
+    actualFun = q->ident;
     if (!basicBlock->quadlist.empty()) {
         basicBlock->num = controlFlowGraph->basicBlocks.size();
         setMap();
@@ -39,8 +37,7 @@ void BasicBlockConverter::visitQuadFunBegin(QuadFunBegin *q) {
         basicBlock = new BasicBlock;
         basicBlock->funIdent = actualFun;
         basicBlock->ident = q->ident;
-    }
-    else{
+    } else {
         basicBlock->ident = q->ident;
         basicBlock->funIdent = actualFun;
     }
@@ -80,8 +77,7 @@ void BasicBlockConverter::visitQuadLabel(QuadLabel *q) {
         basicBlock = new BasicBlock;
         basicBlock->funIdent = actualFun;
         basicBlock->ident = q->label;
-    }
-    else{
+    } else {
         basicBlock->ident = q->label;
         basicBlock->funIdent = actualFun;
     }
@@ -125,21 +121,21 @@ void BasicBlockConverter::visitQuadRetrieve(QuadRetrieve *q) {
 }
 
 void BasicBlockConverter::printBlock() {
-    std::cout << "\n\nNEW BLOCK "<<basicBlock->num<<" "<<basicBlock->ident<<":\n";
+    std::cout << "\n\nNEW BLOCK " << basicBlock->num << " " << basicBlock->ident << ":\n";
     for (Quadruple *quadruple : basicBlock->quadlist) {
         quadruple->accept(tacPrinter);
     }
 }
 
 void BasicBlockConverter::setMap() {
-    if(basicBlock->ident != ""){
+    if (basicBlock->ident != "") {
         controlFlowGraph->blockLabelsMap[basicBlock->ident] = basicBlock->num;
     }
 }
 
 void BasicBlockConverter::setEdges() {
-    for(BasicBlock *basicBlock1 : controlFlowGraph->basicBlocks){
-        for(String ident : basicBlock1->successors){
+    for (BasicBlock *basicBlock1 : controlFlowGraph->basicBlocks) {
+        for (String ident : basicBlock1->successors) {
             int predNum = controlFlowGraph->blockLabelsMap[ident];
             controlFlowGraph->basicBlocks[predNum]->predecessors.insert(basicBlock1->num);
         }

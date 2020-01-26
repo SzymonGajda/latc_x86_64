@@ -43,7 +43,6 @@ class Allocator {
 public:
 
     std::map<int, Ident> registersIdentMap;
-    std::vector<String> code;
     int numOfRegisters = 9;
     std::map<int, RegisterDescription> registers;
     std::map<Ident, ValueDescription> values;
@@ -51,6 +50,8 @@ public:
     std::map<Ident, int> registerAllocationMap;
     SymbolsTable *symbolsTable;
     BasicBlock *actualBasicBlock;
+
+    String resultCode = "";
 
 
     void initRegisters();
@@ -100,7 +101,10 @@ public:
 
     void saveRax();
 
-    void initFunArgs(std::vector<Ident> argIdents, std::map<Ident, LivenessInfo> liveVariables, std::map<Ident, int> actualBlockMemMap);
+    void initFunArgs(std::vector<Ident> argIdents, std::map<Ident, LivenessInfo> liveVariables,
+                     std::map<Ident, int> actualBlockMemMap);
+
+    void popFunArgs(int paramNum);
 
     int getFreeRegister(int exclude1, int exclude2);
 
@@ -108,27 +112,12 @@ public:
 
     void spillRegister(int reg);
 
-    void saveRegBeforeCall();
-
     void genParam(int paramNum, int val);
 
     void genParam(int paramNum, Ident val);
 
     void genRetrieve(Ident ident);
 
-    /*  int getFreeMem();
-
-      void addLocationToValue(Ident ident, bool isInReg, int desc);
-
-      void addContentToRegister(int reg, Ident ident);
-
-      void addContentToMem(int reg, Ident ident);
-
-      void removeLocationFromValue(Ident ident, bool isInReg, int desc);
-
-      void removeContentFromRegister(int reg, Ident ident);
-
-      void removeContentFromMem(int reg, Ident ident);*/
 };
 
 

@@ -11,7 +11,6 @@ void ThreeAddressCodeConverter::visitFnDef(FnDef *p) {
     for (std::pair<String, String> pair : functionHeader.args) {
         String newSymbol = symbolsTable->getNewSymbol();
         newFunctionArgIdents.push_back(newSymbol);
-        //functionHeaders->getHeader(p->ident_).newArgSymbols.emplace_back(newSymbol);
         symbolsTable->addSymbol(pair.second, newSymbol, pair.first);
     }
     functionHeader.newArgSymbols = newFunctionArgIdents;

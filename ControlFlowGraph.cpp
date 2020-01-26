@@ -30,48 +30,44 @@ void ControlFlowGraph::calculateDataFlow() {
         }
     } while (isChanged);
 
-    /*for (BasicBlock *basicBlock1 : basicBlocks) {
-        basicBlock1->inLiveVariable = basicBlock1->calculateLiveness(basicBlock1->outLiveVariable);
-    }*/
-
 }
 
 void ControlFlowGraph::printCFG() {
     TACPrinter tacPrinter;
-    for(BasicBlock *basicBlock : basicBlocks){
-        std::cout<<"\n\nNEW BLOCK "<<basicBlock->num<<" "<<basicBlock->ident<<":\n";
-        std::cout<<"predecessors: ";
-        for(Integer pred : basicBlock->predecessors){
-            for(auto m : blockLabelsMap){
-                if(m.second == pred){
-                    std::cout<<m.first<<" ";
+    for (BasicBlock *basicBlock : basicBlocks) {
+        std::cout << "\n\nNEW BLOCK " << basicBlock->num << " " << basicBlock->ident << ":\n";
+        std::cout << "predecessors: ";
+        for (Integer pred : basicBlock->predecessors) {
+            for (auto m : blockLabelsMap) {
+                if (m.second == pred) {
+                    std::cout << m.first << " ";
                 }
             }
         }
-        std::cout<<"\n";
-        std::cout<<"successors: ";
-        for(String s : basicBlock->successors){
-            std::cout<<s<<" ";
+        std::cout << "\n";
+        std::cout << "successors: ";
+        for (String s : basicBlock->successors) {
+            std::cout << s << " ";
         }
-        std::cout<<"\n";
-        std::cout<<"MEMORY MAP: \n";
-        for(auto m : basicBlock->memoryMap){
-            std::cout<<m.first<<" "<<m.second<<"\n";
+        std::cout << "\n";
+        std::cout << "MEMORY MAP: \n";
+        for (auto m : basicBlock->memoryMap) {
+            std::cout << m.first << " " << m.second << "\n";
         }
-        std::cout<<"\n\n";
+        std::cout << "\n\n";
         int ind = -1;
-        for(auto it = basicBlock->liveness.rbegin(); it!=basicBlock->liveness.rend();it++ ){
-            std::cout<<ind<<": ";
+        for (auto it = basicBlock->liveness.rbegin(); it != basicBlock->liveness.rend(); it++) {
+            std::cout << ind << ": ";
             ind++;
-            for(auto livenessInfo : (*it)){
-                std::cout<<livenessInfo.second.ident<<" "<<livenessInfo.second.nextUse<<"     ";
+            for (auto livenessInfo : (*it)) {
+                std::cout << livenessInfo.second.ident << " " << livenessInfo.second.nextUse << "     ";
             }
-            std::cout<<"\n";
+            std::cout << "\n";
         }
-        std::cout<<"\n";
+        std::cout << "\n";
         ind = 0;
         for (Quadruple *quadruple : basicBlock->quadlist) {
-            std::cout<<ind<<": ";
+            std::cout << ind << ": ";
             ind++;
             quadruple->accept(&tacPrinter);
         }
@@ -80,17 +76,17 @@ void ControlFlowGraph::printCFG() {
 }
 
 void ControlFlowGraph::generateMemoryMap(SymbolsTable *symbolsTable) {
-    for(auto block : basicBlocks){
+    for (auto block : basicBlocks) {
         block->generateMemoryMap(symbolsTable);
     }
 }
 
 void ControlFlowGraph::deleteCFG() {
-    for(int i = 0; i<basicBlocks.size(); i++){
-        for(int i2 = 0; i2 < basicBlocks[i]->quadlist.size(); i2++){
+    for (int i = 0; i < basicBlocks.size(); i++) {
+        for (int i2 = 0; i2 < basicBlocks[i]->quadlist.size(); i2++) {
             delete basicBlocks[i]->quadlist[i2];
         }
-            delete basicBlocks[i];
+        delete basicBlocks[i];
     }
 
 }

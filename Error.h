@@ -18,8 +18,6 @@ public:
 
     Error();
 
-    bool isError1() const;
-
     void setIsError(bool isError);
 
     const String &getErrorMessage() const;

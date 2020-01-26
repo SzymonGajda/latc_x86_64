@@ -9,18 +9,25 @@
 #include <map>
 #include "Absyn.H"
 #include "ControlFlowGraph.h"
-class Node{
+
+class Node {
 public:
     Ident ident;
     int color = -1;
     std::set<Ident> edges;
 };
+
 class GlobalAllocator {
     std::map<Ident, Node> graph;
+
     void insertValues(Ident fun, ControlFlowGraph *controlFlowGraph);
+
     void color();
+
     int getFreeColor(std::set<int> takenColors);
+
     void setAllocationMap();
+
 public:
     int numOfRegisters = 5;
     std::map<Ident, int> allocationMap;

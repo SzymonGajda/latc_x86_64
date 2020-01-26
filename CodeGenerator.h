@@ -36,7 +36,7 @@ public:
 
     void popCallPreservedRegisters();
 
-    std::ostream& writeString(std::ostream& out, std::string const& s);
+    std::string writeString(std::string const &s);
 
     void visitQuadAss1(QuadAss1 *q);
 

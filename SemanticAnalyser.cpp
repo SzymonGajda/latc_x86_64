@@ -47,7 +47,6 @@ void SemanticAnalyser::visitBlk(Blk *blk) {
 
 void SemanticAnalyser::visitEmpty(Empty *empty) {
 
-
 }
 
 void SemanticAnalyser::visitBStmt(BStmt *bstmt) {
@@ -59,13 +58,19 @@ void SemanticAnalyser::visitBStmt(BStmt *bstmt) {
 void SemanticAnalyser::visitDecl(Decl *decl) {
 
     decl->type_->accept(this);
-    DeclVisitor declVisitor;
-    declVisitor.declType = type;
-    declVisitor.functionHeaders = functionHeaders;
-    declVisitor.symbolsTable = symbolsTable;
-    declVisitor.error = error;
-    declVisitor.isReturn = isReturn;
-    decl->listitem_->accept(&declVisitor);
+    if (type == "void") {
+        error->setIsError(true);
+        error->setErrorMessage("Error at line " + std::to_string(decl->line_number) +
+                               ": variables can't have void type\n");
+    } else {
+        DeclVisitor declVisitor;
+        declVisitor.declType = type;
+        declVisitor.functionHeaders = functionHeaders;
+        declVisitor.symbolsTable = symbolsTable;
+        declVisitor.error = error;
+        declVisitor.isReturn = isReturn;
+        decl->listitem_->accept(&declVisitor);
+    }
 }
 
 void SemanticAnalyser::visitAss(Ass *ass) {
@@ -403,6 +408,12 @@ void SemanticAnalyser::visitEAdd(EAdd *eadd) {
             error->setIsError(true);
             error->setErrorMessage("Error at line " + std::to_string(eadd->line_number) +
                                    ": both arguments of " + op + " operation must be int or string\n");
+            return;
+        }
+        if (type1 == "string" && type2 == "string" && op != "+") {
+            error->setIsError(true);
+            error->setErrorMessage("Error at line " + std::to_string(eadd->line_number) +
+                                   ": operation " + op + " can't be applied to string values\n");
             return;
         }
         if (type1 == "int") {

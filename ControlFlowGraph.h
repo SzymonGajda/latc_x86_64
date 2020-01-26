@@ -13,11 +13,14 @@
 class ControlFlowGraph {
 public:
     std::map<String, int> blockLabelsMap;
-    std::vector<BasicBlock*> basicBlocks;
+    std::vector<BasicBlock *> basicBlocks;
 
     void calculateDataFlow();
+
     void generateMemoryMap(SymbolsTable *symbolsTable);
+
     void printCFG();
+
     void deleteCFG();
 };
 

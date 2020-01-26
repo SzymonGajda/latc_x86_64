@@ -1769,7 +1769,7 @@ ListExpr *ListExpr::clone() const {
 
 
 QuadBlk::QuadBlk(const QuadBlk &other) {
-    quadlist = new std::vector<Quadruple*>(*other.quadlist);
+    quadlist = new std::vector<Quadruple *>(*other.quadlist);
 }
 
 QuadBlk &QuadBlk::operator=(const QuadBlk &other) {
@@ -1778,7 +1778,7 @@ QuadBlk &QuadBlk::operator=(const QuadBlk &other) {
     return *this;
 }
 
-QuadBlk::QuadBlk(std::vector<Quadruple*> *list) {
+QuadBlk::QuadBlk(std::vector<Quadruple *> *list) {
     quadlist = list;
 }
 
@@ -1799,7 +1799,7 @@ void QuadBlk::swap(QuadBlk &other) {
 }
 
 QuadBlk::QuadBlk() {
-    quadlist = new std::vector<Quadruple*>();
+    quadlist = new std::vector<Quadruple *>();
 }
 
 /********************   QuadAss1    ********************/
@@ -2026,7 +2026,8 @@ QuadArg::QuadArg() {
     var = "";
 }
 
-QuadArg::QuadArg(bool isValue, String value, const String &var) : isValue(isValue), stringValue(value), var(var), type("string") {}
+QuadArg::QuadArg(bool isValue, String value, const String &var) : isValue(isValue), stringValue(value), var(var),
+                                                                  type("string") {}
 
 
 /*****************   QuadReturnNoVal    ***********************/
@@ -2036,15 +2037,15 @@ QuadReturnNoVal::QuadReturnNoVal(const QuadReturnNoVal &) {
 
 }
 
-QuadReturnNoVal &QuadReturnNoVal::operator=(const QuadReturnNoVal &){}
+QuadReturnNoVal &QuadReturnNoVal::operator=(const QuadReturnNoVal &) {}
 
-void QuadReturnNoVal::accept(Visitor *v){
+void QuadReturnNoVal::accept(Visitor *v) {
     v->visitQuadReturnNoVal(this);
 }
 
-QuadReturnNoVal *QuadReturnNoVal::clone() const{return nullptr;}
+QuadReturnNoVal *QuadReturnNoVal::clone() const { return nullptr; }
 
-void QuadReturnNoVal::swap(QuadReturnNoVal &){}
+void QuadReturnNoVal::swap(QuadReturnNoVal &) {}
 
 /********************* QuadRetrieve *************************/
 
@@ -2075,7 +2076,7 @@ QuadFunBegin::QuadFunBegin() {
 
 }
 
-QuadFunBegin::QuadFunBegin(const String ident) : ident(ident){}
+QuadFunBegin::QuadFunBegin(const String ident) : ident(ident) {}
 
 void QuadFunBegin::accept(Visitor *v) {
     v->visitQuadFunBegin(this);

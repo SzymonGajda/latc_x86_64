@@ -13,13 +13,13 @@
 #include "TACPrinter.h"
 #include "SymbolsTable.h"
 
-class LivenessInfo{
+class LivenessInfo {
 public:
     LivenessInfo(Ident ident, int nextUse);
 
     LivenessInfo();
 
-    bool operator ==(const LivenessInfo &b) const;
+    bool operator==(const LivenessInfo &b) const;
 
     LivenessInfo operator=(const LivenessInfo);
 
@@ -32,24 +32,18 @@ public:
     int num;
     std::set<String> successors;
     std::set<int> predecessors;
-    //SymbolsTable symbolsTable;
-    std::vector<Quadruple*> quadlist;
+    std::vector<Quadruple *> quadlist;
     std::vector<std::map<Ident, LivenessInfo> > liveness;
     std::map<Ident, LivenessInfo> inLiveVariable;
     std::map<Ident, LivenessInfo> outLiveVariable;
     Ident ident = "";
     std::map<Ident, int> memoryMap;
     Ident funIdent = "";
+
     void generateMemoryMap(SymbolsTable *symbolsTable);
 
     std::map<Ident, LivenessInfo> calculateLiveness(std::map<Ident, LivenessInfo> out);
 };
-
-
-
-
-
-
 
 
 #endif //LATC_X86_64_BASICBLOCK_H

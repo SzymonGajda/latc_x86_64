@@ -9,7 +9,7 @@
 #include <set>
 #include "BaseVisitor.H"
 
-class LivenessAnalyser : public BaseVisitor{
+class LivenessAnalyser : public BaseVisitor {
 
 public:
     std::set<String> created;
@@ -17,21 +17,21 @@ public:
 
     void visitQuadAss1(QuadAss1 *q);
 
-    void  visitQuadAss2(QuadAss2 *q);
+    void visitQuadAss2(QuadAss2 *q);
 
-    void  visitQuadCopy(QuadCopy *q);
+    void visitQuadCopy(QuadCopy *q);
 
-    void  visitQuadJmp(QuadJmp *q);
+    void visitQuadJmp(QuadJmp *q);
 
-    void  visitQuadLabel(QuadLabel *q);
+    void visitQuadLabel(QuadLabel *q);
 
-    void  visitQuadIf(QuadIf *q);
+    void visitQuadIf(QuadIf *q);
 
-    void  visitQuadParam(QuadParam *q);
+    void visitQuadParam(QuadParam *q);
 
-    void  visitQuadCall(QuadCall *q);
+    void visitQuadCall(QuadCall *q);
 
-    void  visitQuadReturn(QuadReturn *q);
+    void visitQuadReturn(QuadReturn *q);
 
     void visitQuadReturnNoVal(QuadReturnNoVal *q);
 

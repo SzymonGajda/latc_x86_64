@@ -12,7 +12,7 @@
 #include "Absyn.H"
 #include "Error.h"
 
-class VarInfo{
+class VarInfo {
 public:
     String ident;
     String type;
@@ -25,7 +25,7 @@ class SymbolsTable {
 
     int lastSymbol = 0;
     int depth = 0;
-    std::map<String, std::stack< VarInfo > > symbolsMap;
+    std::map<String, std::stack<VarInfo> > symbolsMap;
     std::map<String, String> allSymbolsMap;
     std::set<String> symbolsSet;
 public:
@@ -35,18 +35,25 @@ public:
                  const std::set<String> &symbolsSet);
 
     void addSymbol(Ident ident, String type, int lineNumber, Error &error);
+
     void addSymbol(Ident ident1, Ident ident2, String type);
+
     void addLabel(Ident ident);
+
     String getSymbol(Ident ident1);
+
     String getType(Ident ident, int lineNumber, Error &error);
+
     String getType(Ident ident);
+
     void entryScope();
+
     void exitScope();
+
     String getNewSymbol();
+
     String getNewSymbol(Ident ident);
 };
-
-
 
 
 #endif //LATC_X86_64_SYMBOLSTABLE_H

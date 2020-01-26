@@ -20,10 +20,7 @@ std::map<Ident, LivenessInfo> BasicBlock::calculateLiveness(std::map<Ident, Live
         for (auto it = temp.begin(); it != temp.end(); it++) {
             LivenessInfo livenessInfo = it->second;
             livenessInfo.nextUse++;
-            //temp[it->first] = livenessInfo;
-           // temp.erase(it->first);
-           // temp.emplace(livenessInfo.ident, livenessInfo);
-           temp.find(it->first)->second = livenessInfo;
+            temp.find(it->first)->second = livenessInfo;
         }
         for (auto it = livenessAnalyser.destroyed.begin(); it != livenessAnalyser.destroyed.end(); it++) {
             if (temp.find((*it)) != temp.end()) {
@@ -37,7 +34,6 @@ std::map<Ident, LivenessInfo> BasicBlock::calculateLiveness(std::map<Ident, Live
         }
         for (auto it = livenessAnalyser.created.begin(); it != livenessAnalyser.created.end(); it++) {
             LivenessInfo livenessInfo = LivenessInfo((*it), 1);
-            // temp[(*it)]livenessInfo;
             temp.emplace((*it), livenessInfo);
         }
         liveness.push_back(temp);
@@ -48,8 +44,8 @@ std::map<Ident, LivenessInfo> BasicBlock::calculateLiveness(std::map<Ident, Live
 void BasicBlock::generateMemoryMap(SymbolsTable *symbolsTable) {
     int nextMemLoc = 0;
     for (auto live : liveness) {
-        for(auto variable : live){
-            if(memoryMap.find(variable.first) == memoryMap.end()){
+        for (auto variable : live) {
+            if (memoryMap.find(variable.first) == memoryMap.end()) {
                 memoryMap.emplace(variable.first, nextMemLoc);
                 nextMemLoc++;
             }

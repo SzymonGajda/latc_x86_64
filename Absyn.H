@@ -316,25 +316,25 @@ public:
 
     virtual void visitQuadAss1(QuadAss1 *q) = 0;
 
-    virtual void  visitQuadAss2(QuadAss2 *q) = 0;
+    virtual void visitQuadAss2(QuadAss2 *q) = 0;
 
-    virtual void  visitQuadCopy(QuadCopy *q) = 0;
+    virtual void visitQuadCopy(QuadCopy *q) = 0;
 
-    virtual void  visitQuadJmp(QuadJmp *q) = 0;
+    virtual void visitQuadJmp(QuadJmp *q) = 0;
 
-    virtual void  visitQuadLabel(QuadLabel *q) = 0;
+    virtual void visitQuadLabel(QuadLabel *q) = 0;
 
-    virtual void  visitQuadIf(QuadIf *q) = 0;
+    virtual void visitQuadIf(QuadIf *q) = 0;
 
-    virtual void  visitQuadParam(QuadParam *q) = 0;
+    virtual void visitQuadParam(QuadParam *q) = 0;
 
-    virtual void  visitQuadCall(QuadCall *q) = 0;
+    virtual void visitQuadCall(QuadCall *q) = 0;
 
     virtual void visitQuadFunBegin(QuadFunBegin *q) = 0;
 
-    virtual void  visitQuadReturn(QuadReturn *q) = 0;
+    virtual void visitQuadReturn(QuadReturn *q) = 0;
 
-    virtual void  visitQuadReturnNoVal(QuadReturnNoVal *q) = 0;
+    virtual void visitQuadReturnNoVal(QuadReturnNoVal *q) = 0;
 
     virtual void visitQuadRetrieve(QuadRetrieve *q) = 0;
 
@@ -450,8 +450,11 @@ public:
 class QuadArg {
 public:
     QuadArg(bool isValue, int value, const String &var);
+
     QuadArg(bool isValue, String stringValue, const String &var);
+
     QuadArg();
+
     bool isValue;
     String type;
     String stringValue;
@@ -606,7 +609,7 @@ public:
     void swap(QuadCall &);
 };
 
-class QuadFunBegin : public Quadruple{
+class QuadFunBegin : public Quadruple {
 public:
     Ident ident;
 
@@ -680,7 +683,7 @@ public:
 
 class QuadBlk : public Block {
 public:
-    std::vector<Quadruple*> *quadlist;
+    std::vector<Quadruple *> *quadlist;
 
     QuadBlk(const QuadBlk &other);
 
@@ -688,7 +691,7 @@ public:
 
     QuadBlk &operator=(const QuadBlk &other);
 
-    explicit QuadBlk(std::vector<Quadruple*> *list);
+    explicit QuadBlk(std::vector<Quadruple *> *list);
 
     ~QuadBlk();
 
@@ -698,7 +701,6 @@ public:
 
     void swap(QuadBlk &);
 };
-
 
 
 class Prog : public Program {

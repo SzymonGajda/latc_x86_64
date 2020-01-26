@@ -11,7 +11,6 @@ class TopDefAnalyser : public BaseVisitor {
     String type;
     std::vector<std::pair<String, String> > args;
 
-
 public:
     Error error;
 
