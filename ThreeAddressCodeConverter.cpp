@@ -176,6 +176,7 @@ void ThreeAddressCodeConverter::visitELitFalse(ELitFalse *p) {
 }
 
 void ThreeAddressCodeConverter::visitEApp(EApp *p) {
+    funIdent = p->ident_;
     p->listexpr_->accept(this);
     QuadCall *call = new QuadCall(p->ident_, p->listexpr_->size());
     quadBlk->quadlist->push_back(call);
@@ -482,7 +483,7 @@ void ThreeAddressCodeConverter::visitListExpr(ListExpr *p) {
         args.push_back(arg);
     }
     for (auto it = args.rbegin(); it != args.rend(); it++) {
-        QuadParam *param = new QuadParam(*(it));
+        QuadParam *param = new QuadParam(*(it), funIdent);
         quadBlk->quadlist->push_back(param);
     }
 }

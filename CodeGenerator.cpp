@@ -115,6 +115,20 @@ void CodeGenerator::visitQuadParam(QuadParam *q) {
         resultCode += allocator->resultCode;
         allocator->resultCode = "";
     }
+    if (paramNum == -1) {
+        int argNum = functionHeaders->getHeader(q->ident).args.size();
+        if (argNum > 6) {
+            if ((stackAlignment->stackAlignment + ((argNum - 6) * 8) + 8) % 16 != 0) {
+                resultCode += "subq $8, %rsp\n";
+                stackAlignment->isStackAlignedBeforeCall = true;
+            }
+        } else {
+            if ((stackAlignment->stackAlignment + 8) % 16 != 0) {
+                resultCode += "subq $8, %rsp\n";
+                stackAlignment->isStackAlignedBeforeCall = true;
+            }
+        }
+    }
     if (q->arg.isValue) {
         allocator->genParam(paramNum, q->arg.value);
         resultCode += allocator->resultCode;
@@ -133,11 +147,21 @@ void CodeGenerator::visitQuadCall(QuadCall *q) {
         resultCode += allocator->resultCode;
         allocator->resultCode = "";
     }
+    if (paramNum == -1 && !stackAlignment->isStackAlignedBeforeCall) {
+        if ((stackAlignment->stackAlignment + 8) % 16 != 0) {
+            resultCode += "subq $8, %rsp\n";
+            stackAlignment->isStackAlignedBeforeCall = true;
+        }
+    }
     paramNum = -1;
     resultCode += "pushq %r11\n";
     resultCode += "call " + q->label + "\n";
     resultCode += "popq %r11\n";
     allocator->popFunArgs(q->argsNum);
+    if (stackAlignment->isStackAlignedBeforeCall) {
+        resultCode += "add $8, %rsp\n";
+        stackAlignment->isStackAlignedBeforeCall = false;
+    }
     if (functionHeaders->getHeader(q->label).returnType == "void") {
         allocator->clearRegistersInfo();
         resultCode += allocator->resultCode;
@@ -177,6 +201,8 @@ void CodeGenerator::visitQuadRetrieve(QuadRetrieve *q) {
 
 void CodeGenerator::visitQuadFunBegin(QuadFunBegin *q) {
     GlobalAllocator globalAllocator;
+    stackAlignment->stackAlignment = 8;
+    stackAlignment->isStackAlignedBeforeCall = false;
     registerAllocationMap = globalAllocator.allocateRegisters(q->ident, controlFlowGraph);
     allocator->registerAllocationMap = registerAllocationMap;
     int numOfVariables = getNumOfLocalVariables(q->ident);
@@ -184,6 +210,7 @@ void CodeGenerator::visitQuadFunBegin(QuadFunBegin *q) {
     resultCode += "pushq %rbp\n";
     resultCode += "movq %rsp, %rbp\n";
     resultCode += "subq $" + std::to_string(numOfVariables * 8) + ", %rsp\n";
+    stackAlignment->stackAlignment += (numOfVariables * 8) + 8;
     if (q->ident != "main") {
         pushCallPreservedRegisters();
     }
@@ -196,6 +223,7 @@ void CodeGenerator::visitQuadFunBegin(QuadFunBegin *q) {
 void CodeGenerator::generateCode() {
     allocator->initRegisters();
     allocator->initRegistersIdentMap();
+    allocator->stackAlignment = stackAlignment;
     resultCode += allocator->resultCode;
     allocator->resultCode = "";
     resultCode += ".extern printInt\n"
@@ -265,6 +293,7 @@ void CodeGenerator::pushCallPreservedRegisters() {
     resultCode += "pushq %r13\n";
     resultCode += "pushq %r14\n";
     resultCode += "pushq %r15\n";
+    stackAlignment->stackAlignment += 5 * 8;
 }
 
 void CodeGenerator::popCallPreservedRegisters() {
@@ -273,7 +302,6 @@ void CodeGenerator::popCallPreservedRegisters() {
     resultCode += "popq %r13\n";
     resultCode += "popq %r12\n";
     resultCode += "popq %rbx\n";
-
 }
 
 std::string CodeGenerator::writeString(std::string const &s) {

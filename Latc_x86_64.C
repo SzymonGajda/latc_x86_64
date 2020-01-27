@@ -78,6 +78,7 @@ int main(int argc, char **argv) {
         codeGenerator.stringValues = basicBlockConverter->stringValues;
         codeGenerator.functionHeaders = functionHeaders;
         codeGenerator.allocator = new Allocator;
+        codeGenerator.stackAlignment = new StackAlignment;
         codeGenerator.allocator->symbolsTable = symbolsTable;
         codeGenerator.generateCode();
 
@@ -101,6 +102,7 @@ int main(int argc, char **argv) {
 
         basicBlockConverter->controlFlowGraph->deleteCFG();
         delete codeGenerator.allocator;
+        delete codeGenerator.stackAlignment;
         delete symbolsTable;
         delete threeAddressCodeConverter;
         delete functionHeaders;

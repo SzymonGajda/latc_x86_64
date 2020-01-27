@@ -577,10 +577,11 @@ public:
 class QuadParam : public Quadruple {
 public:
     QuadArg arg;
+    Ident ident;
 
     QuadParam(const QuadParam &);
 
-    QuadParam(const QuadArg &arg);
+    QuadParam(const QuadArg &arg, const Ident &ident1);
 
     QuadParam &operator=(const QuadParam &);
 

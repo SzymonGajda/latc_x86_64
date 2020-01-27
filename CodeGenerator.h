@@ -11,11 +11,14 @@
 #include "Allocator.h"
 #include "FunctionHeader.h"
 
+
+
 class CodeGenerator : public BaseVisitor {
 public:
     ControlFlowGraph *controlFlowGraph;
     Allocator *allocator;
     BasicBlock *actualBasicBlock;
+    StackAlignment *stackAlignment;
     bool isBlockEndedWithJump;
     Ident actualFun;
     FunctionHeaders *functionHeaders;

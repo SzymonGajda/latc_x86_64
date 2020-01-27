@@ -1966,7 +1966,7 @@ QuadParam::QuadParam(const QuadParam &) {
 QuadParam &QuadParam::operator=(const QuadParam &) {
 }
 
-QuadParam::QuadParam(const QuadArg &arg) : arg(arg) {}
+QuadParam::QuadParam(const QuadArg &arg, const Ident &ident1) : arg(arg), ident(ident1) {}
 
 /********************   QuadCall    ********************/
 

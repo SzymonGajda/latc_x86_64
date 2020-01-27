@@ -622,7 +622,8 @@ void Allocator::genAss2(Ident res, int val1, Ident arg2, String op) {
                       + "\n";
         resultCode += "cqo\n";
     } else {
-        if (registerAllocationMap.find(res)->second != -1) {
+        if (registerAllocationMap.find(res)->second != -1 &&
+            registerAllocationMap.find(res)->second != registerAllocationMap.find(arg2)->second) {
             resReg = registerAllocationMap.find(res)->second;
         } else {
             resReg = getFreeRegister(-1, -1);
@@ -705,6 +706,12 @@ void Allocator::genAss2(Ident res, int val1, Ident arg2, String op) {
         resultCode += endLabel + ":\n";
 
     }
+    if (registerAllocationMap.find(res)->second != -1 && resReg != registerAllocationMap.find(res)->second) {
+        resultCode += "movq %" + registersIdentMap.find(resReg)->second + ", %"
+                      + registersIdentMap.find(registerAllocationMap.find(res)->second)->second + "\n";
+        resReg = registerAllocationMap.find(res)->second;
+    }
+
     registers.find(resReg)->second.isFree = false;
     registers.find(resReg)->second.contents.insert(res);
     values.find(res)->second.isValue = false;
@@ -1252,9 +1259,17 @@ void Allocator::addString(Ident res, Ident s1, Ident s2) {
     if (!registers.find(0)->second.isFree) {
         spillRegister(0);
     }
+    if ((stackAlignment->stackAlignment + 8) % 16 != 0) {
+        resultCode += "subq $8, %rsp\n";
+        stackAlignment->isStackAlignedBeforeCall = true;
+    }
     resultCode += "pushq %r11\n";
     resultCode += "call _concat\n";
     resultCode += "popq %r11\n";
+    if (stackAlignment->isStackAlignedBeforeCall) {
+        resultCode += "add $8, %rsp\n";
+        stackAlignment->isStackAlignedBeforeCall = false;
+    }
 
     resReg = 0;
     registers.find(resReg)->second.isFree = false;

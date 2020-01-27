@@ -24,6 +24,7 @@ public:
     String op;
     String type;
     String declType;
+    Ident funIdent;
 
     void visitFnDef(FnDef *p);
 

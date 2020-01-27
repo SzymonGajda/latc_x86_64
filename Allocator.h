@@ -11,6 +11,11 @@
 #include "BasicBlock.h"
 #include "SymbolsTable.h"
 
+class StackAlignment{
+public:
+    int stackAlignment = 0;
+    bool isStackAlignedBeforeCall = false;
+};
 
 class RegisterDescription {
 public:
@@ -50,7 +55,7 @@ public:
     std::map<Ident, int> registerAllocationMap;
     SymbolsTable *symbolsTable;
     BasicBlock *actualBasicBlock;
-
+    StackAlignment *stackAlignment;
     String resultCode = "";
 
 
