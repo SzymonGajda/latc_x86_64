@@ -11,7 +11,7 @@
 #include "BasicBlock.h"
 #include "SymbolsTable.h"
 
-class StackAlignment{
+class StackAlignment {
 public:
     int stackAlignment = 0;
     bool isStackAlignedBeforeCall = false;

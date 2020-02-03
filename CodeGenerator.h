@@ -12,7 +12,6 @@
 #include "FunctionHeader.h"
 
 
-
 class CodeGenerator : public BaseVisitor {
 public:
     ControlFlowGraph *controlFlowGraph;

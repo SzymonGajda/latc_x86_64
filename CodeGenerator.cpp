@@ -279,11 +279,11 @@ int CodeGenerator::getNumOfLocalVariables(Ident funIdent) {
 }
 
 void CodeGenerator::printRegisterAllocation() {
-    resultCode += "\n\n";
+    std::cout<< "\n\n";
     for (auto value : registerAllocationMap) {
         std::cout << value.first << " " << value.second << "\n";
     }
-    resultCode += "\n\n";
+    std::cout<< "\n\n";
 
 }
 

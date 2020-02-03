@@ -188,7 +188,12 @@ void ThreeAddressCodeConverter::visitEApp(EApp *p) {
         Ident ident = symbolsTable->getNewSymbol();
         QuadRetrieve *quadRetrieve = new QuadRetrieve(ident);
         quadBlk->quadlist->push_back(quadRetrieve);
-        arg = QuadArg(false, 0, ident);
+        if(functionHeader.returnType != "string") {
+            arg = QuadArg(false, 0, ident);
+        }
+        else{
+            arg = QuadArg(false, "", ident);
+        }
     }
 }
 

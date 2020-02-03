@@ -9,13 +9,13 @@ void Allocator::copy(Ident ident1, Ident ident2) {
     ValueDescription valueDescription1 = values[ident1];
     ValueDescription valueDescription2 = values[ident2];
 
-    if (valueDescription1.locations.empty() && !valueDescription1.isValue &&
+    if (valueDescription1.locations.empty() && !valueDescription1.isValue && !valueDescription1.isSaved &&
         (registerAllocationMap.find(ident1) == registerAllocationMap.end() ||
          registerAllocationMap.find(ident1)->second == -1)) {
         return;
     }
 
-    if (valueDescription2.locations.empty() && !valueDescription2.isValue &&
+    if (valueDescription2.locations.empty() && !valueDescription2.isValue && !valueDescription1.isSaved &&
         (registerAllocationMap.find(ident2) == registerAllocationMap.end() ||
          registerAllocationMap.find(ident2)->second == -1)) {
         return;
@@ -112,7 +112,7 @@ void Allocator::initRegisters() {
 void Allocator::copy(Ident ident1, int val) {
     ValueDescription valueDescription1 = values[ident1];
 
-    if (valueDescription1.locations.empty() && !valueDescription1.isValue &&
+    if (valueDescription1.locations.empty() && !valueDescription1.isValue && !valueDescription1.isSaved &&
         (registerAllocationMap.find(ident1) == registerAllocationMap.end() ||
          registerAllocationMap.find(ident1)->second == -1)) {
         return;
@@ -1059,7 +1059,7 @@ void Allocator::moveLocalVariables(std::map<Ident, LivenessInfo> liveVariables, 
     std::set<Ident> movedValues;
     bool isXchg;
     for (auto live : liveVariables) {
-        if (registerAllocationMap.find(live.first)->second == -1) {
+        if (registerAllocationMap.find(live.first)->second == -1 || registerAllocationMap.find(live.first) == registerAllocationMap.end()) {
             isXchg = false;
             if (nextBlockMemMap.find(live.second.ident) != nextBlockMemMap.end()) {
                 nextVarLocation = nextBlockMemMap.find(live.first)->second;
@@ -1205,13 +1205,13 @@ void Allocator::initFunArgs(std::vector<Ident> argIdents, std::map<Ident, Livene
                 values.find(argIdents[i])->second.locations.insert(location);
             } else {
                 if (registerAllocationMap.find(argIdents[i])->second != -1) {
-                    resultCode += "movq " + std::to_string(-((argIdents.size() - paramsReg.size()) + 1 + i) * -8)
+                    resultCode += "movq " + std::to_string(-((argIdents.size() - paramsReg.size()) + i) * -8)
                                   + "(%rbp), %"
                                   + registersIdentMap.find(registerAllocationMap.find(argIdents[i])->second)->second
                                   + "\n";
                 } else {
                     actualBlockMemMap.erase(argIdents[i]);
-                    actualBlockMemMap.emplace(argIdents[i], -(argIdents.size() - paramsReg.size()) + 1 + i);
+                    actualBlockMemMap.emplace(argIdents[i], -(argIdents.size() - paramsReg.size()) + i);
                 }
             }
         }
@@ -1310,7 +1310,7 @@ void Allocator::clearRegistersInfo() {
 
 void Allocator::saveValue(Ident ident) {
     int resReg = registerAllocationMap.find(ident)->second;
-    if (!values.find(ident)->second.isSaved && resReg != -1) {
+    if (!values.find(ident)->second.isSaved && resReg != -1 && registerAllocationMap.find(ident) != registerAllocationMap.end()) {
         if (values.find(ident)->second.isValue) {
             resultCode += "movq $" + std::to_string(values.find(ident)->second.value) + ", %" +
                           registersIdentMap.find(resReg)->second
